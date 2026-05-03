@@ -18,7 +18,7 @@ export const homepageQuery = defineQuery(`
           description_en,
           description_ar,
           date,
-          tools, // تأكيد جلب البرامج في الصفحة الرئيسية
+          tools,
           thumbnail {
             asset->{
               url
@@ -31,7 +31,7 @@ export const homepageQuery = defineQuery(`
 `);
 
 /* ═══════════════════════════════════════════
-    SITE SETTINGS + THEME COLORS
+    SITE SETTINGS + THEME COLORS (التعديل هنا)
     ═══════════════════════════════════════════ */
 
 export const siteSettingsQuery = defineQuery(`
@@ -40,7 +40,15 @@ export const siteSettingsQuery = defineQuery(`
     metaDescription_en,
     metaDescription_ar,
     whatsappNumber,
-    socialLinks,
+    socialLinks[] {
+      platform,
+      url,
+      iconImage {
+        asset->{
+          url
+        }
+      }
+    },
     lightBackground,
     lightSurface,
     lightPrimary,
@@ -75,7 +83,7 @@ export const allProjectsQuery = defineQuery(`
     description_ar,
     date,
     featured,
-    tools // موجودة هنا تمام
+    tools
   }
 `);
 
@@ -103,7 +111,7 @@ export const projectBySlugQuery = defineQuery(`
     },
     caseStudy_en,
     caseStudy_ar,
-    tools // تأكيد جلب البرامج في صفحة التفاصيل
+    tools
   }
 `);
 

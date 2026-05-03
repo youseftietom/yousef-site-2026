@@ -128,16 +128,19 @@ export const siteSettings = defineType({
           fields: [
             {
               name: "platform",
-              title: "Platform",
-              type: "string",
-              options: {
-                list: [
-                  "Behance", "Dribbble", "LinkedIn", "Instagram",
-                  "Twitter", "YouTube", "Vimeo", "GitHub",
-                ],
-              },
+              title: "Platform Name",
+              type: "string", // بقت خانة كتابة عادية دلوقتي
+              description: "اكتب اسم المنصة هنا (مثلاً: Facebook, TikTok, إلخ)",
             },
             { name: "url", title: "URL", type: "url" },
+            /* --- حقل رفع الأيقونة --- */
+            defineField({
+              name: "iconImage",
+              title: "Custom Icon",
+              type: "image",
+              options: { hotspot: true },
+              description: "ارفع أيقونة المنصة هنا (يفضل SVG أو PNG مفرغة)",
+            }),
           ],
         },
       ],

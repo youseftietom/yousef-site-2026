@@ -8,6 +8,10 @@ import { notFound } from "next/navigation";
 import { client } from "../../../sanity/lib/client";
 import { siteSettingsQuery } from "../../../sanity/lib/queries";
 
+// استيراد المكونات الأساسية
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -54,6 +58,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const dir = isRtl(locale as Locale) ? "rtl" : "ltr";
   
+  // جلب إعدادات الموقع (اللي ضفنا فيها السوشيال ميديا والأيقونات)
   const siteSettings = await client.fetch(siteSettingsQuery);
 
   return (
@@ -63,7 +68,6 @@ export default async function LocaleLayout({
       className={`${inter.variable} ${syne.variable} ${cairo.variable} ${tajawal.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      {/* ضفنا suppressHydrationWarning هنا كمان عشان نسكت React خالص */}
       <body className="min-h-full flex flex-col bg-background text-text-primary" suppressHydrationWarning>
         <ThemeInjector colors={siteSettings} />
         <ThemeProvider
@@ -73,7 +77,17 @@ export default async function LocaleLayout({
           disableTransitionOnChange
         >
           <NextIntlClientProvider messages={messages}>
-            {children}
+            {/* 1. الناف بار يظهر فوق في كل الصفحات */}
+            <Navbar />
+
+            {/* 2. محتوى الصفحة المتغير */}
+            <div className="flex-grow">
+              {children}
+            </div>
+
+            {/* 3. الفوتر يظهر تحت وبنمرر له البيانات اللي جبناها من Sanity */}
+            <Footer socials={siteSettings?.socialLinks || []} />
+            
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

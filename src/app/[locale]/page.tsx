@@ -19,11 +19,11 @@ export default async function HomePage({
 
   return (
     <ClientShell>
-      <Navbar />
+
       <main className="noise-overlay">
         <PageBuilder sections={homepageData?.pageBuilder || null} />
       </main>
-      <Footer />
+
     </ClientShell>
   );
 }
