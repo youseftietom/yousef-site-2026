@@ -20,21 +20,18 @@ export default function Navbar() {
   const t = useTranslations("nav");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
   
   const [hasLoaded, setHasLoaded] = useState(false); 
-  const lastScrollY = React.useRef(0);
 
   useEffect(() => {
+    // الناف بار هيستنى الاسبلاش وبعدين ينزل
     const timer = setTimeout(() => {
       setHasLoaded(true);
     }, 2800); 
 
     const handleScroll = () => {
-      const currentY = window.scrollY;
-      setIsScrolled(currentY > 50);
-      setHidden(currentY > lastScrollY.current && currentY > 300);
-      lastScrollY.current = currentY;
+      // بنعرف بس لو العميل نزل سكرول عشان ندي للناف بار خلفية شفافة
+      setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -57,8 +54,9 @@ export default function Navbar() {
       {/* Desktop Navigation */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
+        // التعديل هنا: لغينا فكرة الاختفاء، الناف بار دايماً عند y: 0 بعد التحميل
         animate={{ 
-          y: !hasLoaded ? -100 : hidden ? -100 : 0,
+          y: !hasLoaded ? -100 : 0,
           opacity: !hasLoaded ? 0 : 1 
         }}
         transition={{ 
