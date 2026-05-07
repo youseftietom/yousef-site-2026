@@ -20,29 +20,27 @@ export default function ProjectsGrid({ data }: { data?: any }) {
   const t = useTranslations("projects");
   const locale = useLocale();
   const [activeFilter, setActiveFilter] = useState("all");
-  const [showAll, setShowAll] = useState(false); // حالة إظهار الكل
+  const [showAll, setShowAll] = useState(false);
 
   const heading = (locale === "ar" ? data?.heading_ar : data?.heading_en) || t("title");
   const subtitle = (locale === "ar" ? data?.subtitle_ar : data?.subtitle_en) || t("subtitle");
   const realProjects = data?.projects || [];
 
-  // تصفية المشاريع بناءً على القسم المختار
   const filtered = useMemo(() => {
     return activeFilter === "all"
       ? realProjects
       : realProjects.filter((p: any) => p.category === activeFilter);
   }, [activeFilter, realProjects]);
 
-  // تحديد المشاريع التي ستظهر (أول 6 أو الكل)
   const visibleProjects = showAll ? filtered : filtered.slice(0, 6);
 
   return (
-    <section id="projects" className="section-spacing relative bg-background">
+    <section id="projects" className="section-spacing relative bg-background text-text-primary">
       <div className="mx-auto max-w-[1400px] px-6">
         
         {/* العناوين */}
         <div className="mb-16 text-center">
-          <TextReveal as="h2" className="font-heading text-4xl md:text-5xl font-bold text-text-primary justify-center tracking-tight">
+          <TextReveal as="h2" className="font-heading text-4xl md:text-5xl font-bold justify-center tracking-tight">
             {heading}
           </TextReveal>
           <motion.p
@@ -56,16 +54,18 @@ export default function ProjectsGrid({ data }: { data?: any }) {
         </div>
 
         {/* أزرار الفلترة */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
+        <div className="flex flex-wrap justify-center gap-2 mb-12 bg-surface/50 dark:bg-transparent p-2 rounded-full max-w-fit mx-auto border dark:border-none border-border/40">
           {categories.map((cat) => (
             <button
               key={cat.value}
               onClick={() => {
                 setActiveFilter(cat.value);
-                setShowAll(false); // ريست للزرار لما يغير القسم
+                setShowAll(false);
               }}
               className={`relative px-6 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-300 ${
-                activeFilter === cat.value ? "text-white" : "text-text-secondary hover:text-text-primary"
+                activeFilter === cat.value 
+                  ? "text-white" 
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
               {activeFilter === cat.value && (
@@ -76,7 +76,7 @@ export default function ProjectsGrid({ data }: { data?: any }) {
           ))}
         </div>
 
-        {/* الجريد - صغرنا الحجم لـ 4 أعمدة */}
+        {/* الجريد */}
         <motion.div 
           layout
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
@@ -96,8 +96,7 @@ export default function ProjectsGrid({ data }: { data?: any }) {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3 }}
-                  // صغرنا الارتفاع لـ 350px والـ rounded لـ 2xl
-                  className="group relative h-[350px] rounded-[1.5rem] overflow-hidden bg-surface border border-border/40 shadow-sm"
+                  className="group relative h-[350px] rounded-[1.5rem] overflow-hidden bg-surface border border-border/40 dark:border-border/10 shadow-sm"
                 >
                   <div className="relative h-full w-full">
                     <Image
@@ -106,10 +105,16 @@ export default function ProjectsGrid({ data }: { data?: any }) {
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
+                    
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                      <span className="text-primary font-bold text-[10px] uppercase tracking-[0.2em] mb-2">
+                    <div className="absolute inset-0 p-6 flex flex-col justify-end z-10">
+                      
+                      {/* === التعديل هنا: ستايل مباشر عشان يشتغل 100% === */}
+                      <span 
+                        className="text-white font-bold text-[10px] uppercase tracking-[0.2em] mb-2"
+                        style={{ textShadow: "0px 2px 5px rgba(0,0,0,0.9)" }}
+                      >
                         {categoryName}
                       </span>
                       
@@ -117,7 +122,7 @@ export default function ProjectsGrid({ data }: { data?: any }) {
                         <h3 className="text-white font-heading text-lg font-bold leading-tight line-clamp-2">
                           {projectTitle}
                         </h3>
-                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black shrink-0 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                        <div className="w-8 h-8 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white shrink-0 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                           <ArrowUpRight size={18} />
                         </div>
                       </div>
@@ -133,12 +138,12 @@ export default function ProjectsGrid({ data }: { data?: any }) {
           </AnimatePresence>
         </motion.div>
 
-        {/* زر See More - بيظهر بس لو في أكتر من 6 مشاريع */}
+        {/* زر See More */}
         {!showAll && filtered.length > 6 && (
           <div className="mt-16 text-center">
             <button
               onClick={() => setShowAll(true)}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-surface border border-border rounded-full text-sm font-bold hover:bg-primary hover:border-primary hover:text-white transition-all duration-300 group"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-surface text-text-primary border border-border/60 rounded-full text-sm font-bold hover:bg-primary hover:border-primary hover:text-white transition-all duration-300 group"
             >
               <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
               <span>{t("seeMore") || "See More Projects"}</span>

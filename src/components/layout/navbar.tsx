@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl"; // التعديل 1: استيراد useLocale
 import { Menu, X } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 import LanguageToggle from "@/components/ui/language-toggle";
@@ -18,6 +18,7 @@ const navLinks = [
 
 export default function Navbar() {
   const t = useTranslations("nav");
+  const locale = useLocale(); // التعديل 2: تعريف locale
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
@@ -41,11 +42,19 @@ export default function Navbar() {
     };
   }, []);
 
+  // التعديل 3: تطوير دالة scrollTo عشان تشتغل في كل الصفحات
   const scrollTo = (href: string) => {
     setIsMenuOpen(false);
+    
+    // بندور على السكشن في الصفحة الحالية
     const el = document.querySelector(href);
+    
     if (el) {
+      // لو إحنا في الصفحة الرئيسية والسكشن موجود، انزل بنعومة
       el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      // لو إحنا جوه صفحة مشروع والسكشن مش موجود، ارجع للرئيسية وبعدين روح للسكشن
+      window.location.href = `/${locale}${href}`;
     }
   };
 
@@ -54,7 +63,6 @@ export default function Navbar() {
       {/* Desktop Navigation */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
-        // التعديل هنا: لغينا فكرة الاختفاء، الناف بار دايماً عند y: 0 بعد التحميل
         animate={{ 
           y: !hasLoaded ? -100 : 0,
           opacity: !hasLoaded ? 0 : 1 
