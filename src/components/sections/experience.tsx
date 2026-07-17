@@ -5,43 +5,18 @@ import { motion, useScroll, useSpring } from "framer-motion";
 import { useTranslations, useLocale } from "next-intl";
 import TextReveal from "@/components/animations/text-reveal";
 
-// --- البيانات الاحتياطية (3 خبرات) ---
-const defaultExperiences = [
+const defaultJobs = [
   {
-    company_en: "Creative Design Studio",
-    company_ar: "استوديو التصميم الإبداعي",
-    role_en: "Senior Graphic Designer",
-    role_ar: "مصمم جرافيك أول",
-    startDate: "2023",
-    endDate: null,
-    current: true,
-    description_en: "Leading brand identity projects and managing design teams.",
-    description_ar: "قيادة مشاريع الهوية البصرية وإدارة فرق التصميم.",
-    tools: ["Photoshop", "Illustrator"]
-  },
-  {
-    company_en: "Tech Solutions Agency",
-    company_ar: "وكالة الحلول التقنية",
-    role_en: "UI/UX Designer",
-    role_ar: "مصمم واجهات",
-    startDate: "2021",
-    endDate: "2023",
-    current: false,
-    description_en: "Designed user-centric interfaces for mobile and web platforms.",
-    description_ar: "تصميم واجهات تركز على المستخدم للهواتف والويب.",
-    tools: ["Figma", "Adobe XD"]
-  },
-  {
-    company_en: "Media Production House",
-    company_ar: "دار الإنتاج الإعلامي",
-    role_en: "Motion Artist",
-    role_ar: "فنان موشن جرافيك",
-    startDate: "2019",
-    endDate: "2021",
-    current: false,
-    description_en: "Created 2D/3D animations for social media campaigns.",
-    description_ar: "إنشاء رسوم متحركة للإعلانات وحملات التواصل.",
-    tools: ["After Effects", "Premiere"]
+    company_en: "Creative Vision Studio",
+    company_ar: "استوديو الرؤية الإبداعية",
+    role_en: "Graphic Designer",
+    role_ar: "مصمم جرافيك",
+    duration_en: "2021 — 2022",
+    duration_ar: "2021 — 2022",
+    description_en: "Created social media content, marketing materials, and promotional designs for various brands while maintaining visual consistency and quality.",
+    description_ar: "إنشاء محتوى لوسائل التواصل الاجتماعي والمواد التسويقية مع الحفاظ على الجودة والهوية البصرية.",
+    techStack: ["Photoshop", "Illustrator"],
+    companyLogo: null
   }
 ];
 
@@ -49,9 +24,8 @@ export default function Experience({ data }: { data?: any }) {
   const t = useTranslations("experience");
   const locale = useLocale();
   const isRtl = locale === "ar";
-  const experiences = data?.experiences?.length > 0 ? data.experiences : defaultExperiences;
+  const jobs = data?.jobs?.length > 0 ? data.jobs : defaultJobs;
 
-  // --- أنيميشن الخط (Progress Line) ---
   const containerRef = React.useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -66,76 +40,106 @@ export default function Experience({ data }: { data?: any }) {
 
   return (
     <section id="experience" className="section-spacing relative" dir={isRtl ? "rtl" : "ltr"}>
-      <div className="mx-auto max-w-4xl px-6">
+      {/* كبرنا عرض الكونتينر سنة عشان الكروت تاخد راحتها بالعرض بدل الطول */}
+      <div className="mx-auto max-w-5xl px-4 md:px-6">
         
-        {/* العناوين */}
-        <div className="mb-12 text-center">
+        <div className="mb-10 text-center">
           <TextReveal as="h2" className="font-heading text-3xl md:text-4xl font-bold text-text-primary justify-center flex">
             {(isRtl ? data?.heading_ar : data?.heading_en) || t("title")}
           </TextReveal>
-          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-text-secondary text-sm md:text-base mt-3 max-w-lg mx-auto">
+          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-text-secondary text-sm mt-2 max-w-lg mx-auto">
             {(isRtl ? data?.subtitle_ar : data?.subtitle_en) || t("subtitle")}
           </motion.p>
         </div>
 
-        {/* منطقة التايم لاين */}
-        <div ref={containerRef} className="relative max-w-3xl mx-auto">
+        <div ref={containerRef} className="relative max-w-4xl mx-auto">
           
-          {/* 1. الخط الخلفي "الباهت" (The Path) */}
-          <div className="absolute w-[2px] bg-slate-200 dark:bg-white/10 top-0 bottom-0 start-0 md:start-6" />
+          {data?.showTimeline !== false && (
+            <>
+              {/* الخط قربناه شوية */}
+              <div className="absolute w-[2px] bg-white/5 top-0 bottom-0 start-[8px] md:start-[16px]" />
+              <motion.div 
+                style={{ scaleY }}
+                className="absolute w-[2px] bg-primary top-0 bottom-0 start-[8px] md:start-[16px] origin-top shadow-[0_0_10px_var(--primary-glow)]" 
+              />
+            </>
+          )}
 
-          {/* 2. الخط الملون "المتحرك" (Animated Progress) */}
-          <motion.div 
-            style={{ scaleY }}
-            className="absolute w-[2px] bg-primary top-0 bottom-0 start-0 md:start-6 origin-top shadow-[0_0_10px_var(--primary-glow)]" 
-          />
-
-          <div className="space-y-10">
-            {experiences.map((exp: any, i: number) => (
+          {/* المسافة بين الكروت بقت ألمّ (space-y-5 md:space-y-6) */}
+          <div className="space-y-5 md:space-y-6">
+            {jobs.map((job: any, i: number) => (
               <motion.div 
                 key={i} 
-                initial={{ opacity: 0, x: isRtl ? 20 : -20 }} 
-                whileInView={{ opacity: 1, x: 0 }} 
-                viewport={{ once: true, margin: "-100px" }}
+                initial={{ opacity: 0, y: 20 }} 
+                whileInView={{ opacity: 1, y: 0 }} 
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="relative ps-8 md:ps-16"
+                className={`relative ${data?.showTimeline !== false ? "ps-8 md:ps-12" : ""}`}
               >
-                {/* النقطة - تم تحسين شكلها لتتفاعل مع الأنيميشن */}
-                <div className="absolute start-0 md:start-[19px] top-2 w-3.5 h-3.5 rounded-full bg-background border-2 border-primary z-20 shadow-[0_0_5px_rgba(var(--primary-rgb),0.5)]" />
+                {/* النقطة صغرت ومكانها اتظبط مع الخط */}
+                {data?.showTimeline !== false && (
+                  <div className="absolute start-[3px] md:start-[11px] top-6 w-2.5 h-2.5 rounded-full bg-background border-[1.5px] border-primary z-20 shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
+                )}
                 
-                {/* الكارت */}
-                <div className="glass-card p-5 md:p-6 hover:bg-white/[0.03] transition-all duration-300 border border-white/5 relative group overflow-hidden">
-                  {/* تأثير لمعة خفيفة عند الـ Hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                {/* الكارت: الحواف بقت حادة شوية (rounded-2xl) والـ Padding قل (p-4 md:p-5) */}
+                <div className="glass-card p-4 md:p-5 hover:bg-white/[0.02] transition-all duration-300 border border-white/5 relative group overflow-hidden flex flex-col h-full rounded-2xl shadow-md">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
-                  <div className="relative z-10">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                  <div className="relative z-10 flex-grow">
+                    
+                    {/* الجزء العلوي: العنوان والشركة + اللوجو */}
+                    <div className="flex justify-between items-start gap-3 mb-2 md:mb-3">
                       <div>
-                        <h3 className="text-lg md:text-xl font-bold text-text-primary group-hover:text-primary transition-colors">
-                          {isRtl ? exp.role_ar : exp.role_en}
+                        {/* حجم الخط بقى مناسب جداً (text-base md:text-xl) */}
+                        <h3 className="text-base md:text-xl font-bold text-text-primary group-hover:text-primary transition-colors duration-300">
+                          {isRtl ? job.role_ar : job.role_en}
                         </h3>
-                        <p className="text-primary/90 text-sm font-medium">
-                          {isRtl ? exp.company_ar : exp.company_en}
+                        <p className="text-primary text-[11px] md:text-sm font-medium mt-0.5">
+                          {isRtl ? job.company_ar : job.company_en}
                         </p>
                       </div>
-                      <span className="text-text-muted text-[10px] font-bold bg-surface-hover px-3 py-1 rounded-md border border-white/5">
-                        {exp.startDate} — {exp.current ? t("present") : exp.endDate}
+
+                      {/* اللوجو صغر وبقى أنيق جداً */}
+                      {data?.showCompanyLogo !== false && job.companyLogo?.asset?.url && (
+                        <div className="flex-shrink-0 bg-white/5 p-1 md:p-1.5 rounded-lg border border-white/10">
+                          <img 
+                            src={job.companyLogo.asset.url} 
+                            alt="Company Logo" 
+                            className="h-6 w-6 md:h-8 md:w-8 object-contain transition-transform duration-300 group-hover:scale-110"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* الوصف صغر سِنة عشان يدي مساحة نظيفة */}
+                    <p className="text-text-secondary text-xs md:text-[13px] leading-relaxed max-w-2xl whitespace-pre-line">
+                      {isRtl ? job.description_ar : job.description_en}
+                    </p>
+                  </div>
+
+                  {/* الجزء السفلي: التقنيات + التاريخ */}
+                  <div className="relative z-10 mt-3 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
+                    
+                    {/* التقنيات */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {data?.showTechStack !== false && job.techStack && job.techStack.length > 0 && (
+                        job.techStack.map((tool: string) => (
+                          <span key={tool} className="px-2 py-1 text-[9px] md:text-[10px] uppercase font-bold rounded bg-primary/10 text-primary border border-primary/20 shadow-sm">
+                            {tool}
+                          </span>
+                        ))
+                      )}
+                    </div>
+
+                    {/* التاريخ صغر وبقى Badge شيك جداً */}
+                    <div className="ms-auto flex-shrink-0">
+                      <span className="inline-block text-text-muted text-[9px] md:text-[10px] font-bold bg-white/5 md:bg-surface-hover px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg border border-white/10 whitespace-nowrap">
+                        {isRtl ? job.duration_ar : job.duration_en}
                       </span>
                     </div>
                     
-                    <p className="text-text-secondary text-sm leading-relaxed max-w-2xl">
-                      {isRtl ? exp.description_ar : exp.description_en}
-                    </p>
-
-                    {/* الأدوات */}
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {exp.tools?.map((tool: string) => (
-                        <span key={tool} className="px-2 py-0.5 text-[9px] uppercase font-bold rounded bg-primary/5 text-primary/70 border border-primary/10">
-                          {tool}
-                        </span>
-                      ))}
-                    </div>
                   </div>
+
                 </div>
               </motion.div>
             ))}

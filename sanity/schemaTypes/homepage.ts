@@ -23,6 +23,7 @@ export const homepage = defineType({
         { type: "aboutSection" },
         { type: "experienceSection" },
         { type: "softwareMarqueeSection" },
+        { type: "brandsSection" }, // 👈 قسم البراندات ظهر هنا في الداش بورد
         { type: "pricingSection" },
         { type: "faqSection" },
         { type: "testimonialSection" },

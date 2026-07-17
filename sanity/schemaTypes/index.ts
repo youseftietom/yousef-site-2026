@@ -14,6 +14,7 @@ import { pricingSection } from "./sections/pricingSection";
 import { faqSection } from "./sections/faqSection";
 import { contactSection } from "./sections/contactSection";
 import { testimonialSection } from "./sections/testimonialSection";
+import { brandsSection } from "./sections/brandsSection"; // 👈 استدعاء قسم البراندات
 
 export const schemaTypes = [
   homepage,
@@ -31,4 +32,5 @@ export const schemaTypes = [
   faqSection,
   contactSection,
   testimonialSection,
+  brandsSection, // 👈 إضافة القسم للـ Sanity
 ];

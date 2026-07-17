@@ -25,6 +25,13 @@ export const homepageQuery = defineQuery(`
       _type == "aboutSection" => {
         heading_en, heading_ar, subtitle_en, subtitle_ar, showStats, showVideo,
         profileImage { asset->{ url } }, cvFile { asset->{ url } }, statistics[] { value, label_en, label_ar }
+      },
+      _type == "experienceSection" => {
+        heading_en, heading_ar, subtitle_en, subtitle_ar, showTechStack, showTimeline, showCompanyLogo,
+        jobs[] {
+          role_en, role_ar, company_en, company_ar, duration_en, duration_ar, description_en, description_ar, techStack,
+          companyLogo { asset->{ url } }
+        }
       }
     }
   }
@@ -33,8 +40,6 @@ export const homepageQuery = defineQuery(`
 export const siteSettingsQuery = defineQuery(`
   *[_type == "siteSettings"][0] {
     ...,
-    enableDynamicPricing,
-    baseCurrency,
     navLinks[] { title_en, title_ar, href },
     socialLinks[] { platform, url, iconOff { asset->{ url } }, iconOn { asset->{ url } } },
     logoImageLight_en { asset->{ url } },

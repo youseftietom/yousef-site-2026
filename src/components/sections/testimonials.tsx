@@ -10,6 +10,9 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
   const locale = useLocale();
   const scrollRef = useRef<HTMLDivElement>(null);
   
+  // خلينا القيمة المبدئية 0 عشان TypeScript ميعملش Error
+  const exactScroll = useRef<number>(0);
+
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -21,13 +24,15 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
   const activeData = testimonials && testimonials.length > 0 ? testimonials : [];
   const duplicatedData = [...activeData, ...activeData, ...activeData, ...activeData];
 
-  // محرك الحركة الأوتوماتيك (تم التعديل عشان يمشي شمال صح)
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || activeData.length === 0) return;
 
     let animationFrameId: number;
     let lastTime = performance.now();
+
+    // تحديث القيمة في البداية
+    exactScroll.current = el.scrollLeft;
 
     const scrollStep = (time: number) => {
       const delta = time - lastTime;
@@ -39,20 +44,22 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
         const step = (speedPixelsPerSecond * delta) / 1000;
         
         if (locale === "ar") {
-          // التعديل هنا: يمشي شمال في العربي
-          el.scrollLeft += step; 
-          // الريسيت لما يوصل للآخر عشان يلف من غير ما يقطع
-          if (el.scrollLeft >= 0) {
-            el.scrollLeft = -halfWidth;
+          exactScroll.current += step; 
+          if (exactScroll.current >= 0) {
+            exactScroll.current -= halfWidth;
           }
         } else {
-          // يمشي شمال في الإنجليزي
-          el.scrollLeft += step;
-          if (el.scrollLeft >= halfWidth) {
-            el.scrollLeft -= halfWidth;
+          exactScroll.current += step;
+          if (exactScroll.current >= halfWidth) {
+            exactScroll.current -= halfWidth;
           }
         }
+        
+        el.scrollLeft = exactScroll.current;
+      } else {
+        exactScroll.current = el.scrollLeft;
       }
+      
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
@@ -78,6 +85,7 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
     const x = e.pageX || (e.touches && e.touches[0].pageX);
     const walk = (x - (scrollRef.current.offsetLeft || 0) - startX) * 1.5;
     scrollRef.current.scrollLeft = scrollLeft - walk;
+    exactScroll.current = scrollRef.current.scrollLeft; 
   };
 
   if (activeData.length === 0) return null;
@@ -99,9 +107,6 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
       </div>
 
       <div className="relative w-full overflow-hidden py-4">
-        <div className="absolute left-0 top-0 bottom-0 w-16 md:w-48 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-16 md:w-48 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-
         <div
           ref={scrollRef}
           onMouseDown={startDragging}

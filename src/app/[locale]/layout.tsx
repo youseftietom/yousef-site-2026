@@ -9,9 +9,12 @@ import { notFound } from "next/navigation";
 import { client } from "../../../sanity/lib/client";
 import { siteSettingsQuery } from "../../../sanity/lib/queries";
 
-import Navbar from "@/components/layout/navbar";
+// المسار النسبي السليم اللي حل المشكلة 🚀
+import Navbar from "../../components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import SplashScreen from "@/components/layout/splash-screen"; 
+
+export const revalidate = 0;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,10 +41,14 @@ const tajawal = Tajawal({
   display: "swap",
 });
 
-// 🔴 دالة الـ Metadata الشاملة للـ SEO
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const siteSettings = await client.fetch(siteSettingsQuery);
+  
+  const siteSettings = await client.fetch(
+    siteSettingsQuery,
+    {},
+    { cache: "no-store", next: { revalidate: 0 } }
+  );
   
   const title = siteSettings?.siteTitle || "Youssef Portfolio";
   const description = locale === "ar" ? siteSettings?.metaDescription_ar : siteSettings?.metaDescription_en;
@@ -87,7 +94,11 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const dir = isRtl(locale as Locale) ? "rtl" : "ltr";
   
-  const siteSettings = await client.fetch(siteSettingsQuery);
+  const siteSettings = await client.fetch(
+    siteSettingsQuery,
+    {},
+    { cache: "no-store", next: { revalidate: 0 } }
+  );
 
   return (
     <html
@@ -107,6 +118,7 @@ export default async function LocaleLayout({
           <NextIntlClientProvider messages={messages}>
             
             <SplashScreen />
+            
             <Navbar navLinks={siteSettings?.navLinks || []} settings={siteSettings} />
 
             <main className="flex-grow flex flex-col min-h-[120vh]">
