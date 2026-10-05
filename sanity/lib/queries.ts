@@ -15,6 +15,15 @@ export const homepageQuery = defineQuery(`
           "galleryImages": mediaGallery[_type == "image"] { asset->{ url } }
         }
       },
+      // 👇 التعديل هنا: سحب أيقونة اللايت والدارك 👇
+      _type == "servicesSection" => {
+        heading_en, heading_ar, subtitle_en, subtitle_ar, whatsappNumber, showContactBanner,
+        services[] {
+          title_en, title_ar, description_en, description_ar, icon, category,
+          customIconLight { asset->{ url } },
+          customIconDark { asset->{ url } }
+        }
+      },
       _type == "testimonialSection" => {
         heading_en, heading_ar, subtitle_en, subtitle_ar, speed,
         "testimonials": selectedTestimonials[]-> {
@@ -32,6 +41,21 @@ export const homepageQuery = defineQuery(`
           role_en, role_ar, company_en, company_ar, duration_en, duration_ar, description_en, description_ar, techStack,
           companyLogo { asset->{ url } }
         }
+      },
+      // 🎬 Showreel Section
+      _type == "showreelSection" => {
+        heading_en, heading_ar, subtitle_en, subtitle_ar, videoUrl,
+        coverImage { asset->{ url, metadata { lqip, dimensions } } }
+      },
+      // 📊 Stats Section
+      _type == "statsSection" => {
+        heading_en, heading_ar, subtitle_en, subtitle_ar,
+        statsList[] { value, label_en, label_ar }
+      },
+      // ✨ Why Choose Me Section
+      _type == "whyChooseMeSection" => {
+        heading_en, heading_ar, subtitle_en, subtitle_ar,
+        featuresList[] { icon, title_en, title_ar, description_en, description_ar }
       }
     }
   }
@@ -63,7 +87,10 @@ export const projectBySlugQuery = defineQuery(`
     description_en, description_ar, caseStudy_en, caseStudy_ar,
     thumbnail { asset->{ url } },
     mediaGallery[] { _type, url, asset->{ url } },
-    tools[] { name, icon { asset->{ url } } }
+    tools[] { name, icon { asset->{ url } } },
+    liveLink,
+    embedCode,
+    projectPdf { asset->{ url } }
   }
 `);
 

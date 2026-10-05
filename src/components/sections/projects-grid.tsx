@@ -83,7 +83,7 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
           )}
         </div>
 
-        {/* 1. الموبايل (التعديل هنا: شلنا touch-pan-x عشان السكرول يشتغل فوق وتحت) */}
+        {/* 1. الموبايل */}
         <div 
           className="md:hidden absolute inset-0 z-20 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
@@ -177,18 +177,37 @@ export default function ProjectsGrid({ data }: { data?: any }) {
   const showFilters = data?.showFilters ?? true;
   const maxProjects = data?.maxProjects || 6;
 
-  const dynamicCategories = data?.categories && data.categories.length > 0 
-    ? data.categories 
-    : [
-        { title_en: "Graphic Design", title_ar: "تصميم جرافيك", value: "graphic-design" },
-        { title_en: "Video Editing", title_ar: "مونتاج فيديو", value: "video-editing" },
-        { title_en: "UI/UX", title_ar: "واجهة المستخدم", value: "ui-ux" },
-      ];
+  // 👇 التعديل الأول: استخدمنا useMemo عشان المصفوفة تفضل ثابتة وماتعلقش الـ useEffect
+  const finalCategories = useMemo(() => {
+    const dynamicCategories = data?.categories && data.categories.length > 0 
+      ? data.categories 
+      : [
+          { title_en: "Graphic Design", title_ar: "تصميم جرافيك", value: "graphic-design" },
+          { title_en: "Video Editing", title_ar: "مونتاج فيديو", value: "video-editing" },
+          { title_en: "UI/UX", title_ar: "واجهة المستخدم", value: "ui-ux" },
+        ];
+    return [
+      { title_en: "All", title_ar: "الكل", value: "all" },
+      ...dynamicCategories
+    ];
+  }, [data?.categories]);
 
-  const finalCategories = [
-    { title_en: "All", title_ar: "الكل", value: "all" },
-    ...dynamicCategories
-  ];
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith("#projects-")) {
+        const category = hash.replace("#projects-", "");
+        const exists = finalCategories.some((c) => c.value === category);
+        if (exists) {
+          setActiveFilter(category);
+          setShowAll(true);
+        }
+      }
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, [finalCategories]);
 
   const filtered = useMemo(() => {
     return activeFilter === "all"
@@ -205,7 +224,7 @@ export default function ProjectsGrid({ data }: { data?: any }) {
       <div className="mx-auto max-w-[1400px] px-6">
         
         <div className="mb-16 text-center">
-          <TextReveal as="h2" className="font-heading text-4xl md:text-5xl font-bold justify-center tracking-tight">
+          <TextReveal as="h2" className="font-heading text-4xl md:text-6xl font-bold text-text-primary justify-center tracking-tight">
             {heading}
           </TextReveal>
           <motion.p
@@ -226,6 +245,10 @@ export default function ProjectsGrid({ data }: { data?: any }) {
                 onClick={() => {
                   setActiveFilter(cat.value);
                   setShowAll(false);
+                  
+                  // 👇 التعديل التاني: بنمسح/نغير الـ Hash القديم من الرابط عشان الفلتر ميفضلش مسجون فيه
+                  const newHash = cat.value === "all" ? window.location.pathname : `#projects-${cat.value}`;
+                  window.history.replaceState(null, "", newHash);
                 }}
                 className={`relative px-6 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-300 ${
                   activeFilter === cat.value 

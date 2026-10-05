@@ -434,3 +434,18 @@ select:focus {
     padding-bottom: 4rem;
   }
 }
+
+/* ═══════════════════════════════════════════
+   MOBILE MENU — SPIN ANIMATION (خفيف، CSS بحت
+   بدل framer-motion، عشان منيو الموبايل متهنجش)
+   ═══════════════════════════════════════════ */
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+  will-change: transform;
+}

@@ -6,25 +6,67 @@ import { client } from "../../../../../sanity/lib/client";
 import { projectBySlugQuery } from "../../../../../sanity/lib/queries";
 import { PortableText } from "@portabletext/react";
 import BackButton from "@/components/ui/back-button"; 
+import { ExternalLink, FileText } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-function getEmbedUrl(url: string) {
-  if (!url) return "";
-  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&]{11})/);
-  if (ytMatch && ytMatch[1]) return `https://www.youtube.com/embed/${ytMatch[1]}`;
-  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
-  if (vimeoMatch && vimeoMatch[1]) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-  return url;
+
+function getEmbedInfo(url: string) {
+  if (!url) return { embedUrl: "", isVertical: false };
+  
+  const isVertical = url.includes("shorts/") || url.includes("reel") || url.includes("tiktok.com");
+  
+  let embedUrl = url;
+  
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([^&?]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+  } else {
+    const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+      embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+  }
+  
+  return { embedUrl, isVertical };
 }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ slug: string; locale: string }> }) {
   const { slug, locale } = await params;
   const t = await getTranslations("projectDetail");
+  
   const project = await client.fetch(projectBySlugQuery, { slug: slug });
 
   if (!project) notFound();
 
   const caseStudy = locale === "ar" ? project.caseStudy_ar : project.caseStudy_en;
+
+  // 👇 التعديل الجديد: التحقق هل في معرض صور ولا هو تصميم واحد بس
+  const horizontalVideos: any[] = [];
+  const otherMedia: any[] = [];
+  
+  const hasMultipleImages = project.mediaGallery && project.mediaGallery.length > 0;
+
+  if (hasMultipleImages) {
+    // لو في معرض صور، افرزهم براحتك (فيديوهات بالعرض وصور/ريلز)
+    project.mediaGallery.forEach((item: any) => {
+      if (item._type === "videoElement" && item.url) {
+        const { isVertical } = getEmbedInfo(item.url);
+        if (!isVertical) {
+          horizontalVideos.push(item);
+        } else {
+          otherMedia.push(item);
+        }
+      } else {
+        otherMedia.push(item);
+      }
+    });
+  } else if (project.thumbnail?.asset?.url) {
+    // لو مفيش معرض (تصميم واحد بس)، هناخد الغلاف ونحطه كأنه هو المعرض عشان يظهر تحت العنوان بشياكة
+    otherMedia.push({
+      _type: "image",
+      asset: project.thumbnail.asset
+    });
+  }
 
   return (
     <main className="min-h-screen bg-background pt-32 pb-20 px-6">
@@ -32,8 +74,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         
         <BackButton locale={locale} text={t("backToProjects")} />
 
-        {/* غلاف المشروع */}
-        {project.thumbnail?.asset?.url && (
+        {/* 👇 الغلاف (الكافر): هيظهر بس لو في أكتر من صورة 👇 */}
+        {hasMultipleImages && project.thumbnail?.asset?.url && (
           <div className="mt-12 rounded-[2.5rem] overflow-hidden border border-border/20 bg-surface/30 p-4 md:p-8 shadow-2xl">
             <Image src={project.thumbnail.asset.url} alt={project.title || "Cover"} width={1920} height={1080} className="w-full h-auto rounded-2xl object-contain max-h-[75vh]" priority />
           </div>
@@ -51,9 +93,36 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
           
-          <h1 className="text-4xl md:text-7xl font-heading font-bold">{project.title}</h1>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <h1 className="text-4xl md:text-7xl font-heading font-bold">{project.title}</h1>
+            
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              {project.liveLink && (
+                <a 
+                  href={project.liveLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary/90 text-white rounded-2xl font-bold transition-all duration-300 hover:shadow-[0_8px_20px_-6px_rgba(var(--primary),0.5)] hover:-translate-y-1"
+                >
+                  <ExternalLink size={20} />
+                  {locale === "ar" ? "زيارة المشروع" : "Visit Project"}
+                </a>
+              )}
+
+              {project.projectPdf?.asset?.url && (
+                <a
+                  href={project.projectPdf.asset.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-surface border border-border/60 hover:border-primary/50 text-text-primary rounded-2xl font-bold transition-all duration-300 hover:bg-primary/5 hover:shadow-lg hover:-translate-y-1"
+                >
+                  <FileText size={20} className="text-primary" />
+                  {locale === "ar" ? "عرض التفاصيل (PDF)" : "View Details (PDF)"}
+                </a>
+              )}
+            </div>
+          </div>
           
-          {/* الأدوات (Tools) */}
           {project.tools && project.tools.length > 0 && (
             <div className="flex flex-wrap gap-3 mt-4">
               {project.tools.map((tool: any, i: number) => (
@@ -72,31 +141,49 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </p>
         </div>
 
-        {/* محتوى دراسة الحالة (Case Study) */}
         {caseStudy && (
           <div className="mt-20 prose prose-lg dark:prose-invert max-w-4xl prose-img:rounded-3xl prose-headings:font-heading">
             <PortableText value={caseStudy} />
           </div>
         )}
 
-        {/* المعرض المدمج القابل للترتيب (صور وفيديوهات) */}
-        {project.mediaGallery && project.mediaGallery.length > 0 && (
-          <div className="mt-24">
+        {/* הפيديوهات المميزة (بالعرض) */}
+        {horizontalVideos.length > 0 && (
+          <div className="mt-24 flex flex-col gap-12">
+            {horizontalVideos.map((item, idx) => {
+              const { embedUrl } = getEmbedInfo(item.url);
+              return (
+                <div key={`h-vid-${idx}`} className="w-full rounded-[2.5rem] overflow-hidden border border-border/20 shadow-2xl bg-surface/30 p-2 md:p-4">
+                  <div className="aspect-video w-full bg-black relative rounded-2xl overflow-hidden">
+                    <iframe 
+                      src={embedUrl} 
+                      className="absolute inset-0 w-full h-full" 
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* باقي المعرض (الصور، فيديوهات الريلز، أو التصميم الوحيد لو مفيش معرض) */}
+        {otherMedia.length > 0 && (
+          <div className={horizontalVideos.length > 0 ? "mt-12" : "mt-24"}>
             <div className={project.detailsLayout === "grid" ? "columns-1 md:columns-2 gap-8" : "flex flex-col gap-12"}>
-              {project.mediaGallery.map((item: any, idx: number) => {
+              {otherMedia.map((item: any, idx: number) => {
                 
-                // لو العنصر فيديو
                 if (item._type === "videoElement" && item.url) {
+                  const { embedUrl } = getEmbedInfo(item.url);
                   return (
-                    <div key={item._key || idx} className="rounded-3xl overflow-hidden border border-border/10 bg-surface/20 shadow-md break-inside-avoid mb-8">
-                      <div className="aspect-video bg-black">
-                        <iframe src={getEmbedUrl(item.url)} className="w-full h-full" allowFullScreen></iframe>
+                    <div key={item._key || idx} className="rounded-3xl overflow-hidden border border-border/10 bg-surface/20 shadow-md break-inside-avoid mb-8 w-full">
+                      <div className="aspect-[9/16] w-full bg-black relative">
+                        <iframe src={embedUrl} className="absolute inset-0 w-full h-full" allowFullScreen></iframe>
                       </div>
                     </div>
                   );
                 }
                 
-                // لو العنصر صورة
                 if (item._type === "image" && item.asset?.url) {
                   return (
                     <div key={item._key || idx} className="rounded-3xl overflow-hidden border border-border/10 bg-surface/20 shadow-md break-inside-avoid mb-8">
@@ -104,9 +191,31 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                     </div>
                   );
                 }
-
                 return null;
               })}
+            </div>
+          </div>
+        )}
+
+        {/* كود Embed فيجما */}
+        {project.embedCode && (
+          <div className="mt-24 pt-16 border-t border-border/20">
+            <div className="mb-8 text-center md:text-start max-w-2xl">
+              <h3 className="text-2xl md:text-3xl font-heading font-bold text-text-primary mb-3">
+                {locale === "ar" ? "جرب النظام بنفسك (تفاعلي)" : "Interactive Prototype"}
+              </h3>
+              <p className="text-text-secondary text-base md:text-lg">
+                {locale === "ar" 
+                  ? "تقدر تتصفح وتجرب تصميم السيستم أو الأبلكيشن لايف من خلال النموذج التفاعلي ده:" 
+                  : "You can navigate and test the live system/application design right here:"}
+              </p>
+            </div>
+
+            <div className="w-full rounded-[2rem] overflow-hidden border border-border/30 shadow-2xl bg-surface/30 p-2">
+              <div 
+                className="w-full [&>iframe]:w-full [&>iframe]:min-h-[500px] md:[&>iframe]:min-h-[700px] [&>iframe]:rounded-xl"
+                dangerouslySetInnerHTML={{ __html: project.embedCode }} 
+              />
             </div>
           </div>
         )}

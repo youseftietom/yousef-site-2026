@@ -91,22 +91,22 @@ export default function Pricing({ data, settings }: Props) {
 
   return (
     <section id="pricing" className="section-spacing relative">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-[1400px] px-6">
         
-        {/* 🔴 1. الهيدر الرئيسي (زي ما هو) */}
-        <div className="mb-16 text-center">
+        {/* 🔴 1. الهيدر الرئيسي */}
+        <div className="mb-20 text-center">
           <TextReveal as="h2" className="font-heading text-4xl md:text-6xl font-bold text-text-primary justify-center">
             {heading || (locale === "ar" ? "الأسعار" : "Pricing")}
           </TextReveal>
           {subtitle && (
-            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-text-secondary text-lg mt-4 max-w-lg mx-auto">
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-text-secondary text-lg md:text-xl mt-6 max-w-2xl mx-auto leading-relaxed">
               {subtitle}
             </motion.p>
           )}
         </div>
 
-        {/* 🔴 2. الباقات الأساسية (زي ما هي بالمللي) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* 🔴 2. الباقات الأساسية */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan, i) => {
             const name = locale === "ar" ? plan.name_ar : plan.name_en;
             const period = locale === "ar" ? plan.period_ar : plan.period_en;
@@ -120,31 +120,37 @@ export default function Pricing({ data, settings }: Props) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
-                className={`glass-card p-8 flex flex-col relative ${plan.highlighted ? "border-primary ring-1 ring-primary/20" : ""}`}
+                className={`glass-card p-10 md:p-12 flex flex-col relative ${
+                  plan.highlighted ? "border-primary ring-1 ring-primary/20" : ""
+                }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-xs font-bold rounded-full uppercase">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-primary text-white text-xs font-bold rounded-full uppercase tracking-widest">
                     {locale === "ar" ? "الأفضل" : "Popular"}
                   </div>
                 )}
 
-                <h3 className="font-heading text-xl font-bold text-text-primary">{name}</h3>
-                
-                <div className="mt-4 mb-2 flex items-baseline gap-1">
-                  <DynamicPrice 
-                    amount={plan.numericPrice} 
-                    fallbackPrice={plan.price || ""} 
-                    settings={settings} 
-                  />
-                  {period && <span className="text-text-muted text-sm ms-1">/ {period}</span>}
-                </div>
-                
-                {desc && <p className="text-text-secondary text-sm mb-6">{desc}</p>}
+                <h3 className="font-heading text-2xl md:text-3xl font-bold text-text-primary">{name}</h3>
 
-                <ul className="space-y-3 mb-8 flex-1">
+                <div className="mt-6 mb-3 flex items-baseline gap-1">
+                  <DynamicPrice
+                    amount={plan.numericPrice}
+                    fallbackPrice={plan.price || ""}
+                    settings={settings}
+                  />
+                  {period && <span className="text-text-muted text-base ms-1">/ {period}</span>}
+                </div>
+
+                {desc && <p className="text-text-secondary text-base mb-8 leading-relaxed">{desc}</p>}
+
+                <ul className="space-y-4 mb-10 flex-1">
                   {plan.features?.map((f, fi) => (
-                    <li key={fi} className="flex items-center gap-3 text-sm">
-                      {f.included ? <Check size={16} className="text-green-500 flex-shrink-0" /> : <X size={16} className="text-text-muted flex-shrink-0" />}
+                    <li key={fi} className="flex items-start gap-3 text-base">
+                      {f.included ? (
+                        <Check size={18} className="text-green-500 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <X size={18} className="text-text-muted flex-shrink-0 mt-0.5" />
+                      )}
                       <span className={f.included ? "text-text-primary" : "text-text-muted line-through"}>
                         {locale === "ar" ? f.text_ar : f.text_en}
                       </span>
@@ -154,10 +160,10 @@ export default function Pricing({ data, settings }: Props) {
 
                 <button
                   onClick={() => scrollTo(plan.ctaLink || "#contact")}
-                  className={`w-full justify-center flex items-center h-12 px-6 rounded-full font-bold text-sm transition-colors duration-200 border-2 ${
-                    plan.highlighted 
-                      ? "border-primary bg-primary/10 text-primary hover:bg-primary hover:text-white" 
-                      : "border-text-primary/20 text-text-primary hover:border-text-primary hover:bg-text-primary/5" 
+                  className={`w-full justify-center flex items-center h-14 px-8 rounded-full font-bold text-base transition-all duration-300 border-2 ${
+                    plan.highlighted
+                      ? "border-primary bg-primary/10 text-primary hover:bg-primary hover:text-white hover:-translate-y-1"
+                      : "border-text-primary/20 text-text-primary hover:border-text-primary hover:bg-text-primary/5 hover:-translate-y-1"
                   }`}
                 >
                   {cta}
@@ -167,31 +173,33 @@ export default function Pricing({ data, settings }: Props) {
           })}
         </div>
 
-        {/* 🔴 3. الأوبشن الأول: الخدمات الفردية بتسعير ذكي (A la carte) */}
+        {/* 🔴 3. الأوبشن الأول: الخدمات الفردية (A la carte) */}
         {showAlaCarte && alaCarteServices.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="mt-16 w-full max-w-4xl mx-auto"
+            className="mt-20 w-full"
           >
-            <h3 className="text-2xl font-bold text-text-primary mb-6 text-center">
+            <h3 className="text-3xl md:text-4xl font-heading font-bold text-text-primary mb-10 text-center">
               {alaCarteHeading || (locale === "ar" ? "خدمات فردية" : "Individual Services")}
             </h3>
-            
-            <div className="glass-card p-6 rounded-3xl border border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div className="glass-card p-8 md:p-10 rounded-3xl border border-border/40 grid grid-cols-1 sm:grid-cols-2 gap-5">
               {alaCarteServices.map((service, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-surface-hover/50 border border-white/5 hover:border-primary/30 transition-colors">
-                  <span className="font-medium text-text-primary text-sm md:text-base">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-5 rounded-2xl bg-surface-hover/50 border border-white/5 hover:border-primary/30 transition-colors"
+                >
+                  <span className="font-medium text-text-primary text-base md:text-lg">
                     {locale === "ar" ? service.name_ar : service.name_en}
                   </span>
-                  <div className="font-bold text-primary">
-                    {/* السعر هنا شغال ذكي بيسمع في الكهربا بتاعتك */}
-                    <DynamicPrice 
-                      amount={service.numericPrice} 
-                      fallbackPrice={service.price || ""} 
-                      settings={settings} 
+                  <div className="font-bold text-primary text-lg">
+                    <DynamicPrice
+                      amount={service.numericPrice}
+                      fallbackPrice={service.price || ""}
+                      settings={settings}
                     />
                   </div>
                 </div>
@@ -207,26 +215,26 @@ export default function Pricing({ data, settings }: Props) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="mt-12 w-full"
+            className="mt-16 w-full"
           >
-            <div className="glass-card p-6 md:p-8 rounded-3xl border border-emerald-500/30 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-emerald-500/5 to-transparent">
-              
-              <div className="relative z-10 text-center md:text-start md:max-w-xl">
-                <h3 className="text-xl md:text-2xl font-bold text-text-primary mb-2 flex items-center justify-center md:justify-start gap-2">
-                  <MessageCircle className="text-emerald-500" size={24} />
+            <div className="glass-card p-8 md:p-14 rounded-[2rem] border border-emerald-500/30 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-r from-emerald-500/5 to-transparent">
+
+              <div className="relative z-10 text-center md:text-start md:max-w-2xl">
+                <h3 className="text-2xl md:text-3xl font-heading font-bold text-text-primary mb-3 flex items-center justify-center md:justify-start gap-3">
+                  <MessageCircle className="text-emerald-500" size={28} />
                   {waHeading}
                 </h3>
-                <p className="text-text-secondary text-sm leading-relaxed">
+                <p className="text-text-secondary text-base md:text-lg leading-relaxed">
                   {waDesc}
                 </p>
               </div>
 
-              <div className="relative z-10 w-full md:w-auto shrink-0 mt-2 md:mt-0">
+              <div className="relative z-10 w-full md:w-auto shrink-0">
                 <a
                   href={waLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full md:w-auto px-8 py-3 rounded-full bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 hover:scale-105 transition-all duration-300 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 rounded-full bg-emerald-500 text-white font-bold text-base hover:bg-emerald-600 hover:-translate-y-1 transition-all duration-300 shadow-lg shadow-emerald-500/20"
                 >
                   {waBtn}
                 </a>

@@ -19,15 +19,19 @@ export const homepage = defineType({
       type: "array",
       of: [
         { type: "heroSection" },
+        { type: "servicesSection" }, // 👈 قسم الخدمات ظهر هنا في الداش بورد
         { type: "projectsGridSection" },
         { type: "aboutSection" },
         { type: "experienceSection" },
         { type: "softwareMarqueeSection" },
-        { type: "brandsSection" }, // 👈 قسم البراندات ظهر هنا في الداش بورد
+        { type: "brandsSection" }, 
         { type: "pricingSection" },
         { type: "faqSection" },
         { type: "testimonialSection" },
         { type: "contactSection" },
+        { type: "showreelSection" }, // 🎬 Showreel / Featured Video section
+        { type: "statsSection" }, // 📊 Stats Section
+        { type: "whyChooseMeSection" }, // ✨ Why Choose Me Section
       ],
     }),
   ],

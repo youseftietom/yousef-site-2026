@@ -7,14 +7,18 @@ import About from "@/components/sections/about";
 import Experience from "@/components/sections/experience";
 import Contact from "@/components/sections/contact";
 import SoftwareMarquee from "@/components/sections/software-marquee";
-import BrandsMarquee from "../sections/brands-marquee";import Pricing from "@/components/sections/pricing";
+import BrandsMarquee from "../sections/brands-marquee";
+import Pricing from "@/components/sections/pricing";
 import FAQ from "@/components/sections/faq";
 import Testimonials from "@/components/sections/testimonials";
+import Services from "@/components/sections/services"; // 👈 استدعاء ملف الخدمات (تأكد من المسار)
+import Showreel from "@/components/sections/showreel"; // 🎬 Showreel section
+import Stats from "@/components/sections/stats"; // 📊 Stats Section
+import WhyChooseMe from "@/components/sections/why-choose-me"; // ✨ Why Choose Me Section
+
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// 🔴 التعديل هنا: خلينا النوع Record<string, any> عشان نفك خنقة الـ TypeScript 
-// وميضربش إيرور لو فيه سكشن مش بياخد settings أو testimonials
 const SECTION_MAP: Record<string, any> = {
   heroSection: Hero,
   projectsGridSection: ProjectsGrid,
@@ -26,6 +30,10 @@ const SECTION_MAP: Record<string, any> = {
   pricingSection: Pricing,
   faqSection: FAQ,
   testimonialSection: Testimonials,
+  servicesSection: Services, // 👈 ضفنا السكشن هنا عشان Next.js يقرأه
+  showreelSection: Showreel, // 🎬 Showreel section
+  statsSection: Stats, // 📊 Stats Section
+  whyChooseMeSection: WhyChooseMe, // ✨ Why Choose Me Section
 };
 
 interface SectionBlock {
@@ -41,6 +49,7 @@ interface PageBuilderProps {
 
 const DEFAULT_SECTIONS: SectionBlock[] = [
   { _type: "heroSection", _key: "fallback-hero" },
+  { _type: "servicesSection", _key: "fallback-services" }, // 👈 ضفناه كـ fallback
   { _type: "projectsGridSection", _key: "fallback-projects" },
   { _type: "aboutSection", _key: "fallback-about" },
   { _type: "experienceSection", _key: "fallback-experience" },

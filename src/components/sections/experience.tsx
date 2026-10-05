@@ -44,7 +44,7 @@ export default function Experience({ data }: { data?: any }) {
       <div className="mx-auto max-w-5xl px-4 md:px-6">
         
         <div className="mb-10 text-center">
-          <TextReveal as="h2" className="font-heading text-3xl md:text-4xl font-bold text-text-primary justify-center flex">
+          <TextReveal as="h2" className="font-heading text-4xl md:text-6xl font-bold text-text-primary justify-center flex">
             {(isRtl ? data?.heading_ar : data?.heading_en) || t("title")}
           </TextReveal>
           <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-text-secondary text-sm mt-2 max-w-lg mx-auto">

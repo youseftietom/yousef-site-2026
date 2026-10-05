@@ -14,7 +14,11 @@ import { pricingSection } from "./sections/pricingSection";
 import { faqSection } from "./sections/faqSection";
 import { contactSection } from "./sections/contactSection";
 import { testimonialSection } from "./sections/testimonialSection";
-import { brandsSection } from "./sections/brandsSection"; // 👈 استدعاء قسم البراندات
+import { brandsSection } from "./sections/brandsSection"; 
+import { servicesSection } from "./sections/servicesSection"; // 👈 استدعاء ملف الخدمات
+import { showreelSection } from "./sections/showreelSection"; // 🎬 Showreel section
+import { statsSection } from "./sections/statsSection"; // 📊 Stats Section
+import { whyChooseMeSection } from "./sections/whyChooseMeSection"; // ✨ Why Choose Me Section
 
 export const schemaTypes = [
   homepage,
@@ -32,5 +36,9 @@ export const schemaTypes = [
   faqSection,
   contactSection,
   testimonialSection,
-  brandsSection, // 👈 إضافة القسم للـ Sanity
+  brandsSection, 
+  servicesSection, // 👈 إضافة القسم للـ Sanity
+  showreelSection, // 🎬 Showreel section
+  statsSection, // 📊 Stats Section
+  whyChooseMeSection, // ✨ Why Choose Me Section
 ];
