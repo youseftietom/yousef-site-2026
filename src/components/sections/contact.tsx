@@ -101,22 +101,11 @@ export default function Contact({ data }: { data?: any }) {
             </div>
 
             <div className="flex justify-center pt-4">
-              <MagneticButton as="button" type="submit" strength={0.3}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "14px 36px",
-                  borderRadius: "9999px",
-                  background: sent ? "#128C7E" : "#25D366",
-                  color: "#ffffff",
-                  fontWeight: 600,
-                  fontSize: "1rem",
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 20px rgba(37,211,102,0.35)",
-                  transition: "all 0.3s ease",
-                }}
+              <MagneticButton 
+                as="button" 
+                type="submit" 
+                strength={0.3}
+                className={`inline-flex items-center gap-[10px] px-[36px] py-[14px] rounded-full text-white font-semibold text-base border-none cursor-pointer shadow-[0_4px_20px_rgba(37,211,102,0.35)] transition-all duration-300 ${sent ? "bg-[#128C7E]" : "bg-[#25D366]"}`}
               >
                 {sent ? (
                   <><CheckCircle size={20} /> <span>{t("successTitle") || "Sent!"}</span></>
