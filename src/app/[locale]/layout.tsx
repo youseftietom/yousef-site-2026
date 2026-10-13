@@ -12,7 +12,8 @@ import { siteSettingsQuery } from "../../../sanity/lib/queries";
 // المسار النسبي السليم اللي حل المشكلة 🚀
 import Navbar from "../../components/layout/navbar";
 import Footer from "@/components/layout/footer";
-import SplashScreen from "@/components/layout/splash-screen"; 
+import SplashScreen from "@/components/layout/splash-screen";
+import WhatsAppButton from "@/components/ui/whatsapp-button";
 
 export const revalidate = 0;
 
@@ -126,6 +127,8 @@ export default async function LocaleLayout({
             </main>
 
             <Footer socials={siteSettings?.socialLinks || []} settings={siteSettings} />
+
+            <WhatsAppButton />
             
           </NextIntlClientProvider>
         </ThemeProvider>

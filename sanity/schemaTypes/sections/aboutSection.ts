@@ -13,6 +13,7 @@ export const aboutSection = defineType({
     defineField({ name: "bio_ar", title: "Bio (Arabic)", type: "text", rows: 6 }),
     defineField({ name: "profileImage", title: "Profile Image", type: "image", options: { hotspot: true } }),
     defineField({ name: "cvFile", title: "CV / Resume File", type: "file", options: { accept: ".pdf" } }),
+    defineField({ name: "behanceUrl", title: "Behance Profile URL", type: "url", initialValue: "https://www.behance.net/youseftiete2b1" }),
     defineField({ name: "showStats", title: "Show Statistics", type: "boolean", initialValue: true }),
     defineField({
       name: "statistics", title: "Statistics Items", type: "array", hidden: ({ parent }) => !parent?.showStats,

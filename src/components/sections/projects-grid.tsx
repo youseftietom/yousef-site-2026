@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
@@ -14,6 +14,9 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
   const [isHovered, setIsHovered] = useState(false);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [mobileSlideIdx, setMobileSlideIdx] = useState(0);
+  const [isTouchPlaying, setIsTouchPlaying] = useState(false);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
+  const touchStartTime = useRef<number>(0);
 
   const projectTitle = locale === "ar" ? project.title_ar || project.title : project.title;
   const imageUrl = project.thumbnail?.asset?.url || project.thumbnail || "";
@@ -49,10 +52,34 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
     return () => clearInterval(interval);
   }, [isHovered, project.hoverType, imagesCount]);
 
+
   const handleMobileScroll = (e: any) => {
     const { scrollLeft, clientWidth } = e.target;
     const newIndex = Math.round(Math.abs(scrollLeft) / clientWidth);
     setMobileSlideIdx(newIndex);
+  };
+
+  // Dribbble-style: لما تلمس الكارت الفيديو يشتغل، لما ترفع إصبعك يوقف
+  const hasVideo = project.hoverType === "video" && project.hoverVideo?.asset?.url;
+
+  const handleTouchStart = () => {
+    if (!hasVideo) return;
+    touchStartTime.current = Date.now();
+    setIsTouchPlaying(true);
+    mobileVideoRef.current?.play().catch(() => {});
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!hasVideo) return;
+    const duration = Date.now() - touchStartTime.current;
+    mobileVideoRef.current?.pause();
+    if (mobileVideoRef.current) mobileVideoRef.current.currentTime = 0;
+    setIsTouchPlaying(false);
+    // لو كان tap سريع (< 200ms) روح لصفحة البروجيكت
+    if (duration < 200 && projectSlug) {
+      window.location.href = `/${locale}/projects/${projectSlug}`;
+    }
+    e.preventDefault();
   };
 
   return (
@@ -96,10 +123,45 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
                 <Link href={`/${locale}/projects/${projectSlug}`} className="absolute inset-0 z-10" draggable={false} />
               </div>
             ))
-          ) : project.hoverType === "video" && project.hoverVideo?.asset?.url ? (
-            <div className="relative min-w-full h-full snap-center">
-              <video src={project.hoverVideo.asset.url} autoPlay loop muted playsInline className="w-full h-full object-cover pointer-events-none" />
-              <Link href={`/${locale}/projects/${projectSlug}`} className="absolute inset-0 z-10" draggable={false} />
+          ) : hasVideo ? (
+            // Dribbble-style: thumbnail + play badge، لما تلمس يشتغل الفيديو
+            <div
+              className="relative min-w-full h-full snap-center select-none"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* Thumbnail */}
+              <Image
+                src={imageUrl}
+                alt={projectTitle}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className={`object-cover pointer-events-none transition-opacity duration-300 ${
+                  isTouchPlaying ? "opacity-0" : "opacity-100"
+                }`}
+              />
+              {/* الفيديو بيظهر لما تلمس */}
+              <video
+                ref={mobileVideoRef}
+                src={project.hoverVideo.asset.url}
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${
+                  isTouchPlaying ? "opacity-100" : "opacity-0"
+                }`}
+              />
+              {/* Play badge في النص */}
+              <div
+                className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
+                  isTouchPlaying ? "opacity-0" : "opacity-100"
+                }`}
+              >
+                <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-xl">
+                  <Play size={22} className="fill-white text-white ml-1" />
+                </div>
+              </div>
             </div>
           ) : (
             <div className="relative min-w-full h-full snap-center">

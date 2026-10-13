@@ -51,6 +51,7 @@ export default function About({ data }: { data?: any }) {
   
   const profileImageUrl = data?.profileImage?.asset?.url;
   const cvLink = data?.cvFile?.asset?.url || "#";
+  const behanceUrl = data?.behanceUrl || "https://www.behance.net/youseftiete2b1";
 
   const statsData = data?.statistics?.length > 0 
     ? data.statistics.map((stat: any) => ({
@@ -92,11 +93,23 @@ export default function About({ data }: { data?: any }) {
                     </div>
                   )}
 
-                  {cvLink !== "#" && (
-                    <motion.a href={cvLink} target="_blank" rel="noopener noreferrer" className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-6 py-3.5 rounded-full bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-text-primary font-medium shadow-xl hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300 group/btn" whileHover={{ y: -5 }} whileTap={{ scale: 0.95 }}>
-                      <Download size={18} className="text-primary group-hover/btn:animate-bounce" />
-                      <span className="text-sm whitespace-nowrap">{locale === "ar" ? "تحميل السيرة الذاتية" : "Download CV"}</span>
-                    </motion.a>
+                  {(cvLink !== "#" || behanceUrl) && (
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+                      {cvLink !== "#" && (
+                        <motion.a href={cvLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-3 rounded-full bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-text-primary font-medium shadow-xl hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300 group/btn" whileHover={{ y: -5 }} whileTap={{ scale: 0.95 }}>
+                          <Download size={16} className="text-primary group-hover/btn:animate-bounce" />
+                          <span className="text-sm whitespace-nowrap">{locale === "ar" ? "تحميل السيرة الذاتية" : "Download CV"}</span>
+                        </motion.a>
+                      )}
+                      {behanceUrl && (
+                        <motion.a href={behanceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-3 rounded-full bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-text-primary font-medium shadow-xl hover:bg-[#1769ff]/20 transition-all duration-300 group/be" whileHover={{ y: -5 }} whileTap={{ scale: 0.95 }}>
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="text-[#1769ff]" aria-hidden="true">
+                            <path d="M6.938 4.503c.702 0 1.34.06 1.92.188.577.13 1.07.33 1.477.603.406.27.72.61.94 1.02.22.41.33.9.33 1.47 0 .64-.17 1.18-.502 1.64-.334.46-.83.83-1.49 1.12.895.26 1.57.7 2.022 1.34.45.63.678 1.39.678 2.29 0 .63-.13 1.19-.39 1.67-.26.48-.62.88-1.08 1.2-.46.32-.995.56-1.6.72-.61.16-1.25.24-1.92.24H0V4.51h6.938v-.007zM16.94 16.665c.44.428 1.073.643 1.9.643.59 0 1.1-.148 1.53-.447.428-.3.692-.61.79-.93h2.588c-.413 1.28-1.048 2.2-1.9 2.75-.85.56-1.884.83-3.08.83-.837 0-1.584-.13-2.243-.4-.659-.27-1.22-.65-1.68-1.14-.46-.49-.81-1.08-1.05-1.77-.24-.69-.36-1.45-.36-2.27 0-.8.12-1.54.37-2.23.25-.69.6-1.28 1.07-1.78.47-.5 1.03-.89 1.68-1.17.65-.28 1.36-.42 2.15-.42.88 0 1.65.17 2.31.51.66.34 1.2.8 1.63 1.39.43.59.74 1.27.93 2.04.19.77.26 1.58.21 2.43h-7.69c0 .84.28 1.64.72 2.07v-.01zM3.496 8.96h2.86c.695 0 1.24-.166 1.636-.5.396-.334.595-.84.595-1.52 0-.67-.195-1.14-.585-1.42-.39-.28-.955-.42-1.695-.42H3.496V8.96zm13.17-2.028c-.574 0-1.05.107-1.428.32-.377.215-.675.47-.892.77-.217.3-.37.63-.456.99-.085.36-.13.71-.13 1.05h5.44c-.07-.94-.39-1.65-.96-2.13-.57-.48-1.28-.72-1.57-.72l-.004-.28zM3.496 14.97h3.24c.8 0 1.43-.2 1.9-.6.47-.4.71-.985.71-1.76 0-.78-.24-1.36-.72-1.74-.48-.38-1.11-.57-1.9-.57H3.496v4.67z"/>
+                          </svg>
+                          <span className="text-sm whitespace-nowrap">Behance</span>
+                        </motion.a>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
