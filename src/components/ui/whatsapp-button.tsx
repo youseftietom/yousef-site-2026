@@ -1,6 +1,18 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 export default function WhatsAppButton() {
+  // يظهر بعد انتهاء الـ splash (2800ms timer + 800ms fade-out = ~3.7s)
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(true);
+    }, 3700);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
       <style>{`
@@ -10,9 +22,19 @@ export default function WhatsAppButton() {
           100% { box-shadow: 0 0 0 0   rgba(37,211,102,0);   }
         }
 
+        @keyframes wa-enter {
+          from { opacity: 0; transform: translateY(16px) scale(0.85); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
+
         #wa-btn {
           animation: wa-pulse 2s ease-out infinite;
-          transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, opacity 0.4s ease;
+        }
+
+        #wa-btn.wa-visible {
+          animation: wa-enter 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards,
+                     wa-pulse 2s ease-out 0.5s infinite;
         }
 
         #wa-btn:hover {
@@ -32,6 +54,7 @@ export default function WhatsAppButton() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="تواصل معنا على واتساب"
+        className={visible ? "wa-visible" : ""}
         style={{
           position: "fixed",
           bottom: "28px",
@@ -50,6 +73,8 @@ export default function WhatsAppButton() {
           textDecoration: "none",
           boxShadow: "0 4px 18px rgba(37,211,102,0.4)",
           whiteSpace: "nowrap",
+          opacity: visible ? 1 : 0,
+          pointerEvents: visible ? "auto" : "none",
         }}
       >
         {/* WhatsApp icon */}

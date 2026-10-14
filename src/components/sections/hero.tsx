@@ -23,7 +23,17 @@ export default function HeroPro({ data }: { data?: any }) {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 30);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrolled = window.scrollY > 30;
+          setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -76,8 +86,8 @@ export default function HeroPro({ data }: { data?: any }) {
           }}
         ></div>
         
-        {/* التوهج تم ضبطه ليكون في المنتصف */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/20 blur-[120px] rounded-full opacity-50"></div>
+        {/* التوهج تم ضبطه ليكون في المنتصف مع تحسين كفاءة المعالج في الموبايل */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[600px] h-[260px] sm:h-[400px] bg-primary/20 blur-[60px] sm:blur-[120px] rounded-full opacity-50 will-change-transform pointer-events-none"></div>
       </div>
 
       <div className="relative z-20 mx-auto max-w-5xl w-full px-4 sm:px-6 text-center flex flex-col items-center justify-center flex-grow">

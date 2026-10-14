@@ -44,7 +44,19 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
 
   useEffect(() => {
     const timer = setTimeout(() => setHasLoaded(true), 2800); 
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrolled = window.scrollY > 50;
+          setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -52,12 +64,12 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
     };
   }, []);
 
-  // تتبع القسم النشط بدقة: بنحدد أي قسم بيقطعه "خط" أسفل الـ navbar فعليًا دلوقتي
-  // (ارتفاع الـ navbar بيتقاس لحظيًا مش رقم ثابت، عشان يفضل دقيق حتى لو تصميم الهيدر اتغير)
-  // وده شغال دايمًا (مش بس والقايمة مفتوحة) ومش بيهم لو زودت/حذفت أقسام لاحقًا
+  // تتبع القسم النشط بدقة مع حماية الـ RAF لمنع الـ Layout Thrashing أثناء السكرول
   useEffect(() => {
     const sectionHrefs = sectionHrefsKey.split("|").filter(Boolean);
     if (sectionHrefs.length === 0) return;
+
+    let ticking = false;
 
     const updateActiveSection = () => {
       const headerLine = (headerRef.current?.offsetHeight ?? 90) + 4;
@@ -97,13 +109,23 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
       setActiveSection((prev) => (prev === current ? prev : current));
     };
 
+    const onScrollOrResize = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateActiveSection();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
     updateActiveSection();
-    window.addEventListener("scroll", updateActiveSection, { passive: true });
-    window.addEventListener("resize", updateActiveSection);
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", updateActiveSection);
-      window.removeEventListener("resize", updateActiveSection);
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
     };
   }, [sectionHrefsKey]);
 
@@ -206,24 +228,15 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.95 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              style={{ transformOrigin: "top right" }}
-              className="absolute top-full mt-4 end-4 w-[280px] rounded-[1.5rem] p-[1.5px] overflow-hidden shadow-[0_10px_40px_rgba(168,85,247,0.25)] z-[9999] md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="absolute top-full mt-4 end-4 w-[280px] rounded-[1.5rem] overflow-hidden border border-border/60 shadow-lg z-[9999] md:hidden"
             >
-              
-              {/* 🐍 تأثير الثعبان البنفسجي — CSS animation عادي، أخف على الموبايل */}
-              <div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] z-0 animate-spin-slow"
-                style={{
-                  background: "conic-gradient(from 0deg, transparent 60%, rgba(168, 85, 247, 0.2) 80%, rgba(168, 85, 247, 1) 100%)",
-                }}
-              />
 
-              {/* 🧊 البوكس الداخلي (الإزاز) */}
-              <div className="relative z-10 w-full bg-background/90 dark:bg-[#0a0a0a]/85 backdrop-blur-md rounded-[calc(1.5rem-1.5px)] shadow-inner max-h-[70vh] overflow-y-auto">
+              {/* البوكس الداخلي */}
+              <div className="relative z-10 w-full bg-background dark:bg-[#0f0f0f] rounded-[1.5rem] max-h-[70vh] overflow-y-auto">
 
                 {/* عنوان تحريري صغير أعلى القايمة — لمسة "استوديو" احترافية */}
                 <div className="px-5 pt-4 pb-2">
@@ -232,30 +245,14 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
                   </span>
                 </div>
 
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    visible: {
-                      opacity: 1,
-                      transition: { staggerChildren: 0.05, delayChildren: 0.1 }
-                    }
-                  }}
-                  className="flex flex-col pb-1.5"
-                >
+                <div className="flex flex-col pb-1.5">
                   {finalLinks.map((link, i) => {
                     const isActive = activeSection === link.href;
                     return (
-                      <motion.button
+                      <button
                         key={i}
-                        variants={{
-                          hidden: { opacity: 0, x: locale === "ar" ? 15 : -15 },
-                          visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
-                        }}
                         onClick={() => scrollTo(link.href)}
-                        className={`group relative w-full flex items-center justify-between gap-3 px-5 py-4 transition-colors duration-300 ${
+                        className={`group relative w-full flex items-center justify-between gap-3 px-5 py-4 transition-colors duration-200 ${
                           i !== finalLinks.length - 1 ? "border-b border-border-subtle/70 dark:border-white/[0.06]" : ""
                         } hover:bg-black/[0.04] dark:hover:bg-white/[0.04]`}
                       >
@@ -269,7 +266,7 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
                         )}
 
                         <span
-                          className={`text-[15px] tracking-tight transition-colors duration-300 ${
+                          className={`text-[15px] tracking-tight transition-colors duration-200 ${
                             isActive ? "text-text-primary font-semibold" : "text-text-secondary font-medium group-hover:text-text-primary"
                           }`}
                         >
@@ -278,16 +275,16 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
 
                         <ArrowIcon
                           size={14}
-                          className={`shrink-0 transition-all duration-300 ${
+                          className={`shrink-0 transition-all duration-200 ${
                             isActive
                               ? "opacity-100 translate-x-0 text-primary"
                               : `opacity-0 text-text-muted group-hover:opacity-100 group-hover:text-primary ${locale === "ar" ? "translate-x-1 group-hover:translate-x-0" : "-translate-x-1 group-hover:translate-x-0"}`
                           }`}
                         />
-                      </motion.button>
+                      </button>
                     );
                   })}
-                </motion.div>
+                </div>
               </div>
             </motion.div>
           )}

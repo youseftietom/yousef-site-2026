@@ -21,7 +21,7 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
   const startX = useRef(0);
   const startTranslateX = useRef(0);
   const isPaused = useRef(false);
-  const isVisible = useRef(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   const heading = locale === "ar" ? (data?.heading_ar || "ماذا يقول عملائي") : (data?.heading_en || "What My Clients Say");
   const subtitle = locale === "ar" ? (data?.subtitle_ar || "قصص نجاح وتجارب حقيقية من شركاء النجاح") : (data?.subtitle_en || "Success stories and experiences from my amazing clients.");
@@ -33,7 +33,9 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
     const el = containerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { isVisible.current = entry.isIntersecting; },
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
       { threshold: 0 }
     );
     observer.observe(el);
@@ -82,7 +84,7 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
 
   useEffect(() => {
     const track = trackRef.current;
-    if (!track || activeData.length === 0 || singleWidth.current <= 0) return;
+    if (!track || !isVisible || activeData.length === 0 || singleWidth.current <= 0) return;
 
     let animationFrameId: number;
     let lastTime = performance.now();
@@ -91,7 +93,7 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
       const delta = time - lastTime;
       lastTime = time;
 
-      if (!isPaused.current && !isDragging && isVisible.current) {
+      if (!isPaused.current && !isDragging) {
         const speedPixelsPerSecond = data?.speed || 45;
         const step = (speedPixelsPerSecond * delta) / 1000;
         const direction = -1;
@@ -105,7 +107,7 @@ export default function Testimonials({ data, testimonials = [] }: { data?: any; 
 
     animationFrameId = requestAnimationFrame(scrollStep);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isDragging, activeData.length, locale, data?.speed, repeatCount]);
+  }, [isVisible, isDragging, activeData.length, locale, data?.speed, repeatCount]);
 
   const getClientX = (e: any) => e.pageX ?? e.touches?.[0]?.pageX ?? 0;
 

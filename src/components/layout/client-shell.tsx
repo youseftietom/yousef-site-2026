@@ -12,7 +12,6 @@ export default function ClientShell({ children }: { children: React.ReactNode })
     <SmoothScrollProvider>
       <CustomCursor />
       {children}
-      <WhatsAppButton />
     </SmoothScrollProvider>
   );
 }

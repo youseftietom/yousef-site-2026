@@ -25,7 +25,9 @@ export default function BrandsMarquee({ data }: { data?: any }) {
 
   if (!logos.length) return null;
 
-  const displayLogos = enableAnimation ? Array(20).fill(logos).flat() : logos;
+  // We only need enough copies to loop seamlessly between 0% and -50% (even multiple)
+  const repeatCount = enableAnimation ? Math.max(2, Math.ceil(8 / logos.length) * 2) : 1;
+  const displayLogos = enableAnimation ? Array(repeatCount).fill(logos).flat() : logos;
 
   return (
     <section className="py-10 md:py-16 relative bg-transparent">
@@ -39,7 +41,8 @@ export default function BrandsMarquee({ data }: { data?: any }) {
       {/* شيلنا الـ overflow-hidden عشان اللوجو ميتقصش مهما حصل */}
       <div className="relative w-full flex items-center justify-center overflow-visible">
         <motion.div
-          className={`${enableAnimation ? "flex w-max items-center" : "flex flex-wrap items-center justify-center w-full max-w-5xl"} gap-x-12 md:gap-x-20 gap-y-8 px-4`}
+          className={`${enableAnimation ? "flex w-max items-center" : "flex flex-wrap items-center justify-center w-full max-w-5xl"} gap-x-12 md:gap-x-20 gap-y-8 px-4 will-change-transform`}
+          style={{ transform: "translate3d(0,0,0)" }}
           animate={enableAnimation ? { x: direction === "left" ? ["0%", "-50%"] : ["-50%", "0%"] } : undefined}
           transition={enableAnimation ? {
             repeat: Infinity,
@@ -67,6 +70,8 @@ export default function BrandsMarquee({ data }: { data?: any }) {
                 <img
                   src={imageUrl}
                   alt={item.name || "Brand Logo"}
+                  loading="lazy"
+                  decoding="async"
                   // الكلاسات دي بتضمن إن اللوجو يفضل جوه المساحة كامل من غير قص
                   className="max-h-full w-auto object-contain group-hover:scale-110 transition-transform duration-500"
                 />

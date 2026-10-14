@@ -8,6 +8,7 @@ import { isRtl, Locale, locales } from "@/i18n/config";
 import { notFound } from "next/navigation";
 import { client } from "../../../sanity/lib/client";
 import { siteSettingsQuery } from "../../../sanity/lib/queries";
+import { LazyMotion, domAnimation } from "framer-motion";
 
 // المسار النسبي السليم اللي حل المشكلة 🚀
 import Navbar from "../../components/layout/navbar";
@@ -118,18 +119,20 @@ export default async function LocaleLayout({
         >
           <NextIntlClientProvider messages={messages}>
             
-            <SplashScreen />
-            
-            <Navbar navLinks={siteSettings?.navLinks || []} settings={siteSettings} />
+            <LazyMotion features={domAnimation}>
+              <SplashScreen />
+              
+              <Navbar navLinks={siteSettings?.navLinks || []} settings={siteSettings} />
 
-            <main className="flex-grow flex flex-col min-h-[120vh]">
-              {children}
-            </main>
+              <main className="flex-grow flex flex-col min-h-[120vh]">
+                {children}
+              </main>
 
-            <Footer socials={siteSettings?.socialLinks || []} settings={siteSettings} />
+              <Footer socials={siteSettings?.socialLinks || []} settings={siteSettings} />
 
-            <WhatsAppButton />
-            
+              <WhatsAppButton />
+            </LazyMotion>
+
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

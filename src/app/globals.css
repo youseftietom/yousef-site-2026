@@ -146,33 +146,50 @@ h1, h2, h3, h4, h5, h6,
 
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
 
 .glass-strong {
   background: var(--glass-bg);
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
 
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: 1.5rem;
-  transition: all 0.4s var(--transition-smooth);
+  transition: box-shadow 0.35s var(--transition-smooth), border-color 0.35s var(--transition-smooth);
+  contain: layout style;
 }
 
 .glass-card:hover {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 0 40px var(--primary-glow);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1), 0 0 32px var(--primary-glow);
   border-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .glass {
+    /* ع الموبايل blur بيكون ثقيل — خليه أدنى قيمة ممكنة */
+    backdrop-filter: blur(6px) saturate(140%);
+    -webkit-backdrop-filter: blur(6px) saturate(140%);
+  }
+  .glass-strong {
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
+  }
+  .glass-card {
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -191,19 +208,25 @@ h1, h2, h3, h4, h5, h6,
   background-size: 128px 128px;
 }
 
+@media (max-width: 768px) {
+  .noise-overlay::after {
+    display: none;
+  }
+}
+
 /* ═══════════════════════════════════════════
    أنيميشن الخلفية الاحترافي (Ambient Aurora Glow)
    تم استبدال الـ orbs القديمة بالأنيميشن السلس ده
    ═══════════════════════════════════════════ */
 
 @keyframes aurora-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(5vw, 5vh) scale(1.1); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(5vw, 5vh, 0) scale(1.05); }
 }
 
 @keyframes aurora-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-5vw, -5vh) scale(0.95); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-5vw, -5vh, 0) scale(0.97); }
 }
 
 body::before, body::after {
@@ -211,37 +234,79 @@ body::before, body::after {
   position: fixed;
   z-index: -2;
   border-radius: 50%;
-  filter: blur(100px);
+  filter: blur(80px);
   pointer-events: none;
-  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  /* will-change only on desktop — avoids extra GPU layer on mobile */
+}
+
+@media (max-width: 768px) {
+  body::before, body::after {
+    filter: blur(30px);
+    animation-duration: 20s !important; /* slower = less CPU on mobile */
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after {
+    animation: none !important;
+  }
+  .floating-badge {
+    animation: none !important;
+  }
+  .animate-spin-slow {
+    animation: none !important;
+  }
 }
 
 body::before {
-  width: 45vw;
-  height: 45vw;
-  min-width: 350px;
-  min-height: 350px;
+  width: 40vw;
+  height: 40vw;
+  min-width: 280px;
+  min-height: 280px;
   top: -10vh;
   left: -10vw;
   background: var(--primary);
-  opacity: 0.12;
-  animation: aurora-1 12s ease-in-out infinite alternate;
+  opacity: 0.10;
+  animation: aurora-1 14s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 body::after {
-  width: 50vw;
-  height: 50vw;
-  min-width: 400px;
-  min-height: 400px;
+  width: 45vw;
+  height: 45vw;
+  min-width: 320px;
+  min-height: 320px;
   bottom: -15vh;
   right: -10vw;
-  background: #8B5CF6; 
-  opacity: 0.08;
-  animation: aurora-2 15s ease-in-out infinite alternate-reverse;
+  background: #8B5CF6;
+  opacity: 0.07;
+  animation: aurora-2 18s ease-in-out infinite alternate-reverse;
+  will-change: transform;
 }
 
-.dark body::before { opacity: 0.18; }
-.dark body::after { opacity: 0.12; background: #EC4899; }
+@media (max-width: 768px) {
+  body::before {
+    width: 60vw;
+    height: 60vw;
+    min-width: 200px;
+    min-height: 200px;
+    opacity: 0.07;
+    will-change: auto; /* remove GPU layer on mobile */
+  }
+  body::after {
+    width: 70vw;
+    height: 70vw;
+    min-width: 220px;
+    min-height: 220px;
+    opacity: 0.05;
+    will-change: auto;
+  }
+}
+
+.dark body::before { opacity: 0.15; }
+.dark body::after { opacity: 0.10; background: #EC4899; }
 
 /* ═══════════════════════════════════════════
    CUSTOM SCROLLBAR
@@ -426,6 +491,9 @@ select:focus {
 .section-spacing {
   padding-top: 8rem;
   padding-bottom: 8rem;
+  /* يخلي الـ browser يتجاهل الـ sections اللي بره الشاشة تماماً */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 600px;
 }
 
 @media (max-width: 768px) {

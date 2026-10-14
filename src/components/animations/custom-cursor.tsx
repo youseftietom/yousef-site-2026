@@ -4,8 +4,6 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CursorState {
-  x: number;
-  y: number;
   text: string;
   isHovering: boolean;
   isHidden: boolean;
@@ -15,58 +13,48 @@ export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorDotRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<CursorState>({
-    x: 0,
-    y: 0,
     text: "",
     isHovering: false,
     isHidden: false,
   });
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [enabled, setEnabled] = useState(false);
 
   const posRef = useRef({ x: 0, y: 0 });
   const targetRef = useRef({ x: 0, y: 0 });
+  // لو الماوس واقف، وقف الـ RAF loop
+  const isMovingRef = useRef(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animIdRef = useRef<number>(0);
 
   useEffect(() => {
+    // بس على الأجهزة اللي فيها ماوس حقيقي
+    const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
     const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    setIsTouchDevice(isTouch);
+    if (!hasFinePointer || isTouch) return;
+    setEnabled(true);
   }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     targetRef.current = { x: e.clientX, y: e.clientY };
-  }, []);
 
-  const handleMouseOver = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const cursorAttr = target.closest("[data-cursor]");
-
-    if (cursorAttr) {
-      const text = cursorAttr.getAttribute("data-cursor") || "";
-      setState((prev) => ({ ...prev, text, isHovering: true }));
-    } else if (
-      target.closest("a") ||
-      target.closest("button") ||
-      target.closest("[role='button']")
-    ) {
-      setState((prev) => ({ ...prev, text: "", isHovering: true }));
-    } else {
-      setState((prev) => ({ ...prev, text: "", isHovering: false }));
+    // ابدأ الـ loop بس لو مش شغال
+    if (!isMovingRef.current) {
+      isMovingRef.current = true;
+      startLoop();
     }
+
+    // وقفه بعد 150ms من آخر حركة
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      isMovingRef.current = false;
+    }, 150);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    setState((prev) => ({ ...prev, isHidden: true }));
-  }, []);
-
-  const handleMouseEnter = useCallback(() => {
-    setState((prev) => ({ ...prev, isHidden: false }));
-  }, []);
-
-  useEffect(() => {
-    if (isTouchDevice) return;
-
-    let animId: number;
-
+  const startLoop = useCallback(() => {
     const animate = () => {
+      if (!isMovingRef.current) return; // وقف لو مفيش حركة
+
       const lerp = 0.15;
       posRef.current.x += (targetRef.current.x - posRef.current.x) * lerp;
       posRef.current.y += (targetRef.current.y - posRef.current.y) * lerp;
@@ -78,30 +66,56 @@ export default function CustomCursor() {
         cursorDotRef.current.style.transform = `translate3d(${targetRef.current.x}px, ${targetRef.current.y}px, 0)`;
       }
 
-      setState((prev) => ({
-        ...prev,
-        x: posRef.current.x,
-        y: posRef.current.y,
-      }));
-      animId = requestAnimationFrame(animate);
+      animIdRef.current = requestAnimationFrame(animate);
     };
+    animIdRef.current = requestAnimationFrame(animate);
+  }, []);
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseover", handleMouseOver);
+  const handleMouseOver = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const cursorAttr = target.closest("[data-cursor]");
+
+    if (cursorAttr) {
+      const text = cursorAttr.getAttribute("data-cursor") || "";
+      setState((prev) => (prev.text === text && prev.isHovering ? prev : { ...prev, text, isHovering: true }));
+    } else if (
+      target.closest("a") ||
+      target.closest("button") ||
+      target.closest("[role='button']")
+    ) {
+      setState((prev) => (prev.text === "" && prev.isHovering ? prev : { ...prev, text: "", isHovering: true }));
+    } else {
+      setState((prev) => (!prev.isHovering ? prev : { ...prev, text: "", isHovering: false }));
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setState((prev) => (prev.isHidden ? prev : { ...prev, isHidden: true }));
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    setState((prev) => (!prev.isHidden ? prev : { ...prev, isHidden: false }));
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    document.addEventListener("mousemove", handleMouseMove, { passive: true });
+    document.addEventListener("mouseover", handleMouseOver, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
-    animId = requestAnimationFrame(animate);
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseover", handleMouseOver);
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
-      cancelAnimationFrame(animId);
+      cancelAnimationFrame(animIdRef.current);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
-  }, [isTouchDevice, handleMouseMove, handleMouseOver, handleMouseLeave, handleMouseEnter]);
+  }, [enabled, handleMouseMove, handleMouseOver, handleMouseLeave, handleMouseEnter]);
 
-  if (isTouchDevice) return null;
+  if (!enabled) return null;
 
   return (
     <>

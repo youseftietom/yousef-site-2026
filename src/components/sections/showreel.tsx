@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { useLocale } from "next-intl";
 import { Play, X } from "lucide-react";
 import Image from "next/image";
@@ -43,10 +43,12 @@ export default function Showreel({ data }: { data?: ShowreelData }) {
   const [playing, setPlaying] = useState(false);
 
   const sectionRef = useRef<HTMLElement>(null);
-  // Ref to the player block — used to scroll it into view on play
   const playerRef = useRef<HTMLDivElement>(null);
+  const prefersReduced = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
-  const bgY = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
+  // بيوقف البارالاكس على الموبايل وعند الـ reduced motion — أخف على CPU
+  const bgYRaw = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
+  const bgY = prefersReduced ? "0%" : bgYRaw;
 
   const heading =
     (isRtl ? data?.heading_ar : data?.heading_en) ||
@@ -89,14 +91,14 @@ export default function Showreel({ data }: { data?: ShowreelData }) {
         style={{ pointerEvents: playing ? "none" : "auto" }}
         className={`relative w-full overflow-hidden bg-black ${playing ? "absolute inset-0 h-full" : "h-[56vw] min-h-[320px] max-h-[85vh]"}`}
       >
-        {/* Parallax image */}
-        <motion.div className="absolute inset-0 w-full h-[115%] top-[-7.5%]" style={{ y: bgY }}>
+        {/* Parallax image with hardware acceleration */}
+        <motion.div className="absolute inset-0 w-full h-[115%] top-[-7.5%] will-change-transform" style={{ y: bgY }}>
           {coverImageUrl ? (
             <Image
               src={coverImageUrl}
               alt={heading}
               fill
-              priority
+              loading="lazy"
               sizes="100vw"
               className="object-cover object-center"
               placeholder={lqip ? "blur" : "empty"}

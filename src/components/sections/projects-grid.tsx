@@ -6,17 +6,21 @@ import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
 import TextReveal from "@/components/animations/text-reveal";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowUpRight, Plus, Images, Play } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 function ProjectCardItem({ project, locale, finalCategories }: { project: any, locale: string, finalCategories: any[] }) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [mobileSlideIdx, setMobileSlideIdx] = useState(0);
   const [isTouchPlaying, setIsTouchPlaying] = useState(false);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const touchStartTime = useRef<number>(0);
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
 
   const projectTitle = locale === "ar" ? project.title_ar || project.title : project.title;
   const imageUrl = project.thumbnail?.asset?.url || project.thumbnail || "";
@@ -62,22 +66,30 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
   // Dribbble-style: لما تلمس الكارت الفيديو يشتغل، لما ترفع إصبعك يوقف
   const hasVideo = project.hoverType === "video" && project.hoverVideo?.asset?.url;
 
-  const handleTouchStart = () => {
-    if (!hasVideo) return;
+  const handleTouchStart = (e: React.TouchEvent) => {
     touchStartTime.current = Date.now();
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    if (!hasVideo) return;
     setIsTouchPlaying(true);
     mobileVideoRef.current?.play().catch(() => {});
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!hasVideo) return;
     const duration = Date.now() - touchStartTime.current;
-    mobileVideoRef.current?.pause();
-    if (mobileVideoRef.current) mobileVideoRef.current.currentTime = 0;
-    setIsTouchPlaying(false);
-    // لو كان tap سريع (< 200ms) روح لصفحة البروجيكت
-    if (duration < 200 && projectSlug) {
-      window.location.href = `/${locale}/projects/${projectSlug}`;
+    const dx = Math.abs(e.changedTouches[0].clientX - touchStartX.current);
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    const moved = dx > 10 || dy > 10; // اعتبره scroll لو تحرك أكتر من 10px
+
+    if (hasVideo) {
+      mobileVideoRef.current?.pause();
+      if (mobileVideoRef.current) mobileVideoRef.current.currentTime = 0;
+      setIsTouchPlaying(false);
+    }
+
+    // روح للصفحة بس لو كان tap حقيقي (سريع + ما اتحركش)
+    if (!moved && duration < 250 && projectSlug) {
+      router.push(`/${locale}/projects/${projectSlug}`);
     }
     e.preventDefault();
   };
@@ -115,12 +127,13 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
           className="md:hidden absolute inset-0 z-20 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
           onScroll={handleMobileScroll}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           {project.hoverType === "slider" && imagesCount > 1 ? (
             allSlides.map((slideUrl: string, idx: number) => (
               <div key={idx} className="relative min-w-full h-full snap-center">
                 <Image src={slideUrl} alt={`Slide ${idx}`} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover pointer-events-none" />
-                <Link href={`/${locale}/projects/${projectSlug}`} className="absolute inset-0 z-10" draggable={false} />
               </div>
             ))
           ) : hasVideo ? (
@@ -147,7 +160,7 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
                 loop
                 muted
                 playsInline
-                preload="metadata"
+                preload="none"
                 className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${
                   isTouchPlaying ? "opacity-100" : "opacity-0"
                 }`}
@@ -166,7 +179,6 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
           ) : (
             <div className="relative min-w-full h-full snap-center">
               <Image src={imageUrl} alt={projectTitle} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover pointer-events-none" />
-              <Link href={`/${locale}/projects/${projectSlug}`} className="absolute inset-0 z-10" draggable={false} />
             </div>
           )}
         </div>
@@ -176,7 +188,7 @@ function ProjectCardItem({ project, locale, finalCategories }: { project: any, l
           <Image src={imageUrl} alt={projectTitle} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover transition-transform duration-700 ease-out group-hover:scale-110 z-0" />
           <div className={`absolute inset-0 z-10 transition-opacity duration-500 bg-black/20 ${isHovered && project.hoverType !== "none" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
             {project.hoverType === "video" && project.hoverVideo?.asset?.url && isHovered && (
-              <video src={project.hoverVideo.asset.url} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+              <video src={project.hoverVideo.asset.url} autoPlay loop muted playsInline preload="none" className="w-full h-full object-cover" />
             )}
             {project.hoverType === "slider" && imagesCount > 1 && (
               <div className="absolute inset-0 w-full h-full">
