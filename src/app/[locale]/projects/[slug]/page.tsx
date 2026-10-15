@@ -5,18 +5,18 @@ import { getTranslations } from "next-intl/server";
 import { client } from "../../../../../sanity/lib/client";
 import { projectBySlugQuery } from "../../../../../sanity/lib/queries";
 import { PortableText } from "@portabletext/react";
-import BackButton from "@/components/ui/back-button"; 
+import BackButton from "@/components/ui/back-button";
 import { ExternalLink, FileText } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 function getEmbedInfo(url: string) {
   if (!url) return { embedUrl: "", isVertical: false };
-  
+
   const isVertical = url.includes("shorts/") || url.includes("reel") || url.includes("tiktok.com");
-  
+
   let embedUrl = url;
-  
+
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([^&?]{11})/);
   if (ytMatch && ytMatch[1]) {
     embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
@@ -26,28 +26,26 @@ function getEmbedInfo(url: string) {
       embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
     }
   }
-  
+
   return { embedUrl, isVertical };
 }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ slug: string; locale: string }> }) {
   const { slug, locale } = await params;
   const t = await getTranslations("projectDetail");
-  
+
   const project = await client.fetch(projectBySlugQuery, { slug: slug });
 
   if (!project) notFound();
 
   const caseStudy = locale === "ar" ? project.caseStudy_ar : project.caseStudy_en;
 
-  // 👇 التعديل الجديد: التحقق هل في معرض صور ولا هو تصميم واحد بس
   const horizontalVideos: any[] = [];
   const otherMedia: any[] = [];
-  
+
   const hasMultipleImages = project.mediaGallery && project.mediaGallery.length > 0;
 
   if (hasMultipleImages) {
-    // لو في معرض صور، افرزهم براحتك (فيديوهات بالعرض وصور/ريلز)
     project.mediaGallery.forEach((item: any) => {
       if (item._type === "videoElement" && item.url) {
         const { isVertical } = getEmbedInfo(item.url);
@@ -61,7 +59,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       }
     });
   } else if (project.thumbnail?.asset?.url) {
-    // لو مفيش معرض (تصميم واحد بس)، هناخد الغلاف ونحطه كأنه هو المعرض عشان يظهر تحت العنوان بشياكة
+    // تم الإبقاء على هذا الجزء حتى لا تظهر الصفحة فارغة تماماً إذا كان المشروع يحتوي على صورة واحدة فقط
     otherMedia.push({
       _type: "image",
       asset: project.thumbnail.asset
@@ -71,15 +69,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   return (
     <main className="min-h-screen bg-background pt-32 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
-        
+
         <BackButton locale={locale} text={t("backToProjects")} />
 
-        {/* 👇 الغلاف (الكافر): هيظهر بس لو في أكتر من صورة 👇 */}
-        {hasMultipleImages && project.thumbnail?.asset?.url && (
-          <div className="mt-12 rounded-[2.5rem] overflow-hidden border border-border/20 bg-surface/30 p-4 md:p-8 shadow-2xl">
-            <Image src={project.thumbnail.asset.url} alt={project.title || "Cover"} width={1920} height={1080} className="w-full h-auto rounded-2xl object-contain max-h-[75vh]" priority />
-          </div>
-        )}
+        {/* تم إزالة كود الغلاف (الكافر) بالكامل من هنا بناءً على طلبك */}
 
         {/* الرأس والمعلومات */}
         <div className="mt-16 flex flex-col gap-6">
@@ -92,16 +85,16 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               </>
             )}
           </div>
-          
+
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <h1 className="text-4xl md:text-7xl font-heading font-bold">{project.title}</h1>
-            
+
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               {project.liveLink && (
-                <a 
-                  href={project.liveLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={project.liveLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary/90 text-white rounded-2xl font-bold transition-all duration-300 hover:shadow-[0_8px_20px_-6px_rgba(var(--primary),0.5)] hover:-translate-y-1"
                 >
                   <ExternalLink size={20} />
@@ -122,7 +115,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               )}
             </div>
           </div>
-          
+
           {project.tools && project.tools.length > 0 && (
             <div className="flex flex-wrap gap-3 mt-4">
               {project.tools.map((tool: any, i: number) => (
@@ -147,7 +140,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
         )}
 
-        {/* הפيديوهات المميزة (بالعرض) */}
+        {/* الفيديوهات المميزة (بالعرض) */}
         {horizontalVideos.length > 0 && (
           <div className="mt-24 flex flex-col gap-12">
             {horizontalVideos.map((item, idx) => {
@@ -155,9 +148,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               return (
                 <div key={`h-vid-${idx}`} className="w-full rounded-[2.5rem] overflow-hidden border border-border/20 shadow-2xl bg-surface/30 p-2 md:p-4">
                   <div className="aspect-video w-full bg-black relative rounded-2xl overflow-hidden">
-                    <iframe 
-                      src={embedUrl} 
-                      className="absolute inset-0 w-full h-full" 
+                    <iframe
+                      src={embedUrl}
+                      className="absolute inset-0 w-full h-full"
                       allowFullScreen
                     ></iframe>
                   </div>
@@ -172,7 +165,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <div className={horizontalVideos.length > 0 ? "mt-12" : "mt-24"}>
             <div className={project.detailsLayout === "grid" ? "columns-1 md:columns-2 gap-8" : "flex flex-col gap-12"}>
               {otherMedia.map((item: any, idx: number) => {
-                
+
                 if (item._type === "videoElement" && item.url) {
                   const { embedUrl } = getEmbedInfo(item.url);
                   return (
@@ -183,7 +176,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                     </div>
                   );
                 }
-                
+
                 if (item._type === "image" && item.asset?.url) {
                   return (
                     <div key={item._key || idx} className="rounded-3xl overflow-hidden border border-border/10 bg-surface/20 shadow-md break-inside-avoid mb-8">
@@ -205,21 +198,21 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 {locale === "ar" ? "جرب النظام بنفسك (تفاعلي)" : "Interactive Prototype"}
               </h3>
               <p className="text-text-secondary text-base md:text-lg">
-                {locale === "ar" 
-                  ? "تقدر تتصفح وتجرب تصميم السيستم أو الأبلكيشن لايف من خلال النموذج التفاعلي ده:" 
+                {locale === "ar"
+                  ? "تقدر تتصفح وتجرب تصميم السيستم أو الأبلكيشن لايف من خلال النموذج التفاعلي ده:"
                   : "You can navigate and test the live system/application design right here:"}
               </p>
             </div>
 
             <div className="w-full rounded-[2rem] overflow-hidden border border-border/30 shadow-2xl bg-surface/30 p-2">
-              <div 
+              <div
                 className="w-full [&>iframe]:w-full [&>iframe]:min-h-[500px] md:[&>iframe]:min-h-[700px] [&>iframe]:rounded-xl"
-                dangerouslySetInnerHTML={{ __html: project.embedCode }} 
+                dangerouslySetInnerHTML={{ __html: project.embedCode }}
               />
             </div>
           </div>
         )}
-        
+
       </div>
     </main>
   );

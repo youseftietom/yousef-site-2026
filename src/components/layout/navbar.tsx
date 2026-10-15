@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocale } from "next-intl"; 
+import { useLocale } from "next-intl";
 import { Menu, X, ArrowUpRight, ArrowUpLeft } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 import LanguageToggle from "@/components/ui/language-toggle";
@@ -14,10 +14,10 @@ interface NavLink {
 }
 
 export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink[], settings?: any }) {
-  const locale = useLocale(); 
+  const locale = useLocale();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false); 
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("");
   const headerRef = useRef<HTMLElement | null>(null);
 
@@ -30,20 +30,21 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
   ];
 
   const finalLinks = navLinks && navLinks.length > 0 ? navLinks : defaultLinks;
-  // مفتاح ثابت (string) بيمثل الأقسام الحالية — لو زودت أو حذفت أقسام، القيمة دي بتتغير
-  // فيعيد الـ effect بتاع تتبع القسم النشط ربط نفسه على الأقسام الجديدة تلقائيًا
   const sectionHrefsKey = finalLinks.map((link) => link.href).join("|");
 
-  const logoType = settings?.logoType || "image"; 
-  const logoText = settings?.logoText || "Youssef."; 
-  
-  const logoLightUrl_en = settings?.logoImageLight_en?.asset?.url || "/logo-light.png"; 
-  const logoDarkUrl_en = settings?.logoImageDark_en?.asset?.url || "/logo-dark.png"; 
-  const logoLightUrl_ar = settings?.logoImageLight_ar?.asset?.url || "/logo-light.png"; 
-  const logoDarkUrl_ar = settings?.logoImageDark_ar?.asset?.url || "/logo-dark.png"; 
+  const logoType = settings?.logoType || "image";
+  const logoText = settings?.logoText || "Youssef.";
+
+  const logoLightUrl_en = settings?.logoImageLight_en?.asset?.url || "/logo-light.png";
+  const logoDarkUrl_en = settings?.logoImageDark_en?.asset?.url || "/logo-dark.png";
+  const logoLightUrl_ar = settings?.logoImageLight_ar?.asset?.url || "/logo-light.png";
+  const logoDarkUrl_ar = settings?.logoImageDark_ar?.asset?.url || "/logo-dark.png";
+
+  // تأكد من مسار الصفحة الحالي (هل إحنا في الصفحة الرئيسية ولا في تفاصيل المشروع؟)
+  const isHomePage = typeof window !== "undefined" && (window.location.pathname === `/${locale}` || window.location.pathname === `/${locale}/`);
 
   useEffect(() => {
-    const timer = setTimeout(() => setHasLoaded(true), 2800); 
+    const timer = setTimeout(() => setHasLoaded(true), 2800);
     let ticking = false;
 
     const handleScroll = () => {
@@ -64,8 +65,10 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
     };
   }, []);
 
-  // تتبع القسم النشط بدقة مع حماية الـ RAF لمنع الـ Layout Thrashing أثناء السكرول
+  // تتبع الأقسام (بيشتغل بس لو إحنا في الصفحة الرئيسية)
   useEffect(() => {
+    if (!isHomePage) return; // لو مش في الرئيسية، متتبعش أي أقسام
+
     const sectionHrefs = sectionHrefsKey.split("|").filter(Boolean);
     if (sectionHrefs.length === 0) return;
 
@@ -75,7 +78,6 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
       const headerLine = (headerRef.current?.offsetHeight ?? 90) + 4;
       let current = "";
 
-      // 1) الأدق: القسم اللي "خط الهيدر" فعليًا واقع جواه (top <= الخط < bottom)
       for (const href of sectionHrefs) {
         const el = document.querySelector(href) as HTMLElement | null;
         if (!el) continue;
@@ -86,8 +88,6 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
         }
       }
 
-      // 2) احتياطي: لو فيه فراغ بين الأقسام ومفيش تطابق مباشر،
-      //    خُد آخر قسم يكون "top" بتاعه فات خط الهيدر
       if (!current) {
         for (const href of sectionHrefs) {
           const el = document.querySelector(href) as HTMLElement | null;
@@ -97,13 +97,9 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
         }
       }
 
-      // 3) لسه من غير نتيجة (يعني لسه فوق كل الأقسام) → أول قسم
       if (!current) current = sectionHrefs[0];
 
-      // 4) لو وصلنا لآخر الصفحة، خلي آخر قسم هو النشط
-      //    (بيحل مشكلة قسم أخير قصير مبيوصلوش خط الهيدر أبدًا)
-      const reachedBottom =
-        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      const reachedBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
       if (reachedBottom) current = sectionHrefs[sectionHrefs.length - 1];
 
       setActiveSection((prev) => (prev === current ? prev : current));
@@ -127,23 +123,37 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
       window.removeEventListener("scroll", onScrollOrResize);
       window.removeEventListener("resize", onScrollOrResize);
     };
-  }, [sectionHrefsKey]);
+  }, [sectionHrefsKey, isHomePage]);
 
-  // امنع سكرول الصفحة اللي وراها لما منيو الموبايل مفتوحة
+  // التحكم في السكرول بتاع الموبايل (إزالة التعليقة)
   useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? "hidden" : "";
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    // الأهم: فك التعليقة لو الـ Component اتشال من الصفحة فجأة
     return () => {
       document.body.style.overflow = "";
     };
   }, [isMenuOpen]);
 
   const scrollTo = (href: string) => {
+    // 1. اقفل المنيو وفك السكرول
     setIsMenuOpen(false);
-    const el = document.querySelector(href);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.body.style.overflow = "";
+
+    // 2. التوجيه بذكاء
+    if (isHomePage) {
+      // لو إحنا في الرئيسية، اعمل سكرول ناعم للقسم
+      const el = document.querySelector(href);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     } else {
-      window.location.href = `/${locale}${href}`;
+      // لو إحنا بره (مثلاً في صفحة تفاصيل المشروع)، وديه للصفحة الرئيسية مع اللينك
+      window.location.href = `/${locale}${href === "#hero" ? "" : href}`;
     }
   };
 
@@ -159,8 +169,8 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
     >
       <nav className="mx-auto max-w-7xl px-4 md:px-6 relative">
         <div className={`flex items-center justify-between rounded-2xl px-4 md:px-6 py-3 transition-all duration-500 ${isScrolled ? "glass-strong border border-white/5 dark:border-white/10 shadow-2xl shadow-black/10" : ""}`}>
-          
-          <motion.a href="#hero" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative flex items-center justify-start cursor-pointer" onClick={(e) => { e.preventDefault(); scrollTo("#hero"); }}>
+
+          <motion.a href={`/${locale}`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative flex items-center justify-start cursor-pointer" onClick={(e) => { e.preventDefault(); scrollTo("#hero"); }}>
             {logoType === "text" ? (
               <span className="text-xl md:text-2xl font-black tracking-tighter text-text-primary whitespace-nowrap py-1">
                 {logoText}
@@ -184,14 +194,14 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
 
           <div className="hidden md:flex items-center gap-1">
             {finalLinks.map((link, index) => {
-              const isActive = activeSection === link.href;
+              // القسم بيكون Active لو إحنا في الرئيسية فقط، لو بره مفيش Active
+              const isActive = isHomePage && activeSection === link.href;
               return (
                 <button
                   key={index}
                   onClick={() => scrollTo(link.href)}
-                  className={`relative group px-4 py-2 text-sm transition-colors rounded-xl hover:bg-surface-hover font-medium overflow-hidden ${
-                    isActive ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
-                  }`}
+                  className={`relative group px-4 py-2 text-sm transition-colors rounded-xl hover:bg-surface-hover font-medium overflow-hidden ${isActive ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
+                    }`}
                 >
                   <span className="relative z-10">{locale === "ar" ? link.title_ar : link.title_en}</span>
                   {isActive ? (
@@ -235,10 +245,8 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
               className="absolute top-full mt-4 end-4 w-[280px] rounded-[1.5rem] overflow-hidden border border-border/60 shadow-lg z-[9999] md:hidden"
             >
 
-              {/* البوكس الداخلي */}
               <div className="relative z-10 w-full bg-background dark:bg-[#0f0f0f] rounded-[1.5rem] max-h-[70vh] overflow-y-auto">
 
-                {/* عنوان تحريري صغير أعلى القايمة — لمسة "استوديو" احترافية */}
                 <div className="px-5 pt-4 pb-2">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-muted">
                     {locale === "ar" ? "التنقل" : "Navigation"}
@@ -247,16 +255,14 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
 
                 <div className="flex flex-col pb-1.5">
                   {finalLinks.map((link, i) => {
-                    const isActive = activeSection === link.href;
+                    const isActive = isHomePage && activeSection === link.href;
                     return (
                       <button
                         key={i}
                         onClick={() => scrollTo(link.href)}
-                        className={`group relative w-full flex items-center justify-between gap-3 px-5 py-4 transition-colors duration-200 ${
-                          i !== finalLinks.length - 1 ? "border-b border-border-subtle/70 dark:border-white/[0.06]" : ""
-                        } hover:bg-black/[0.04] dark:hover:bg-white/[0.04]`}
+                        className={`group relative w-full flex items-center justify-between gap-3 px-5 py-4 transition-colors duration-200 ${i !== finalLinks.length - 1 ? "border-b border-border-subtle/70 dark:border-white/[0.06]" : ""
+                          } hover:bg-black/[0.04] dark:hover:bg-white/[0.04]`}
                       >
-                        {/* شرطة بنفسجية على حافة القسم النشط بس */}
                         {isActive && (
                           <motion.span
                             layoutId="mobile-active-indicator"
@@ -266,20 +272,18 @@ export default function Navbar({ navLinks = [], settings }: { navLinks?: NavLink
                         )}
 
                         <span
-                          className={`text-[15px] tracking-tight transition-colors duration-200 ${
-                            isActive ? "text-text-primary font-semibold" : "text-text-secondary font-medium group-hover:text-text-primary"
-                          }`}
+                          className={`text-[15px] tracking-tight transition-colors duration-200 ${isActive ? "text-text-primary font-semibold" : "text-text-secondary font-medium group-hover:text-text-primary"
+                            }`}
                         >
                           {locale === "ar" ? link.title_ar : link.title_en}
                         </span>
 
                         <ArrowIcon
                           size={14}
-                          className={`shrink-0 transition-all duration-200 ${
-                            isActive
+                          className={`shrink-0 transition-all duration-200 ${isActive
                               ? "opacity-100 translate-x-0 text-primary"
                               : `opacity-0 text-text-muted group-hover:opacity-100 group-hover:text-primary ${locale === "ar" ? "translate-x-1 group-hover:translate-x-0" : "-translate-x-1 group-hover:translate-x-0"}`
-                          }`}
+                            }`}
                         />
                       </button>
                     );
