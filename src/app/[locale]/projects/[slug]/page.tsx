@@ -19,11 +19,11 @@ function getEmbedInfo(url: string) {
 
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([^&?]{11})/);
   if (ytMatch && ytMatch[1]) {
-    embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+    embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&fs=1`; // إضافة fs=1 لضمان تفعيل التكبير في يوتيوب
   } else {
     const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
     if (vimeoMatch && vimeoMatch[1]) {
-      embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+      embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}?title=0&byline=0&portrait=0`;
     }
   }
 
@@ -59,7 +59,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       }
     });
   } else if (project.thumbnail?.asset?.url) {
-    // تم الإبقاء على هذا الجزء حتى لا تظهر الصفحة فارغة تماماً إذا كان المشروع يحتوي على صورة واحدة فقط
     otherMedia.push({
       _type: "image",
       asset: project.thumbnail.asset
@@ -72,9 +71,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
         <BackButton locale={locale} text={t("backToProjects")} />
 
-        {/* تم إزالة كود الغلاف (الكافر) بالكامل من هنا بناءً على طلبك */}
-
-        {/* الرأس والمعلومات */}
         <div className="mt-16 flex flex-col gap-6">
           <div className="flex items-center gap-3 text-text-secondary text-xs font-bold uppercase tracking-widest">
             <span>{project.category}</span>
@@ -140,7 +136,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
         )}
 
-        {/* الفيديوهات المميزة (بالعرض) */}
         {horizontalVideos.length > 0 && (
           <div className="mt-24 flex flex-col gap-12">
             {horizontalVideos.map((item, idx) => {
@@ -151,7 +146,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                     <iframe
                       src={embedUrl}
                       className="absolute inset-0 w-full h-full"
-                      allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                      allowFullScreen={true}
                     ></iframe>
                   </div>
                 </div>
@@ -160,7 +156,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
         )}
 
-        {/* باقي المعرض (الصور، فيديوهات الريلز، أو التصميم الوحيد لو مفيش معرض) */}
         {otherMedia.length > 0 && (
           <div className={horizontalVideos.length > 0 ? "mt-12" : "mt-24"}>
             <div className={project.detailsLayout === "grid" ? "columns-1 md:columns-2 gap-8" : "flex flex-col gap-12"}>
@@ -169,9 +164,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 if (item._type === "videoElement" && item.url) {
                   const { embedUrl } = getEmbedInfo(item.url);
                   return (
-                    <div key={item._key || idx} className="rounded-3xl overflow-hidden border border-border/10 bg-surface/20 shadow-md break-inside-avoid mb-8 w-full">
+                    <div key={item._key || idx} className="rounded-3xl overflow-hidden border border-border/10 bg-surface/20 shadow-md break-inside-avoid mb-8 w-full max-w-[400px] mx-auto">
                       <div className="aspect-[9/16] w-full bg-black relative">
-                        <iframe src={embedUrl} className="absolute inset-0 w-full h-full" allowFullScreen></iframe>
+                        <iframe
+                          src={embedUrl}
+                          className="absolute inset-0 w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                          allowFullScreen={true}
+                        ></iframe>
                       </div>
                     </div>
                   );
@@ -190,7 +190,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
         )}
 
-        {/* كود Embed فيجما */}
         {project.embedCode && (
           <div className="mt-24 pt-16 border-t border-border/20">
             <div className="mb-8 text-center md:text-start max-w-2xl">
